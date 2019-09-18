@@ -2,6 +2,6 @@
 
 An app to retrieve and manage PDF exercise sheets published on websites.
 
-# Written using Flutter
+## Written using Flutter
 
-Get more information about flutter at flutter.dev
+Get more information about flutter at https://flutter.dev
