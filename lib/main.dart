@@ -21,9 +21,9 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
         cardTheme: CardTheme(
-          margin: EdgeInsets.all(5),
+          margin: EdgeInsets.all(7),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
+            borderRadius: BorderRadius.all(Radius.circular(7)),
           )
         )
       ),
@@ -64,28 +64,11 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     ListTile(
-                      leading: Icon(Icons.web),
+                      leading: Icon(Icons.view_list),
                       title: Text(website['name']),
                       subtitle: Text('Points: ' + website['maximumPoints'].toString()),
+                      onTap: () {},
                     ),
-                    ButtonTheme.bar(
-                      child: ButtonBar(
-                        children: <Widget>[
-                          FlatButton(
-                            child: Text('OPEN'),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.settings),
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
-                    )
                   ],
                 ),
               );
