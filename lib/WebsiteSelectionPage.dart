@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
-
 class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
-  sqflite.Database database;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,8 +14,10 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
   }
 
   Widget buildContent() {
+    Future<sqflite.Database> databaseFuture =
+        Provider.of<Future<sqflite.Database>>(context);
     return FutureBuilder(
-        future: openDatabase(),
+        future: readDatabase(databaseFuture),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
@@ -26,7 +26,7 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
           } else if (snapshot.hasData) {
             final List<Map<String, dynamic>> websites = snapshot.data;
             final List<Card> cards =
-            websites.map((Map<String, dynamic> website) {
+                websites.map((Map<String, dynamic> website) {
               return Card(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -34,7 +34,8 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
                     ListTile(
                       leading: Icon(Icons.view_list),
                       title: Text(website['name']),
-                      subtitle: Text('Points: ' + website['maximumPoints'].toString()),
+                      subtitle: Text(
+                          'Points: ' + website['maximumPoints'].toString()),
                       onTap: () {},
                     ),
                   ],
@@ -48,19 +49,9 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
         });
   }
 
-  Future openDatabase() {
+  Future readDatabase(Future<sqflite.Database> databaseFuture) {
     return Future(() async {
-      database = await sqflite.openDatabase('exercise_sheets.db', version: 1,
-          onCreate: (sqflite.Database db, int version) async {
-            await db.execute(
-                'CREATE TABLE Websites (id INTEGER PRIMARY KEY, name TEXT, url TEXT, maximumPoints INTEGER, username TEXT, password TEXT)');
-            await db.insert('Websites', {
-              'name': 'GeoTopo',
-              'url': 'https://www.math.uni-bonn.de/people/ursula/courses.html',
-              'maximumPoints': 50
-            });
-          });
-      return await database.query('Websites');
+      return await (await databaseFuture).query('Websites');
     });
   }
 }
