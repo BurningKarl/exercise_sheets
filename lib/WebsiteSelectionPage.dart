@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
-class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
+class WebsiteSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,9 +44,4 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
       },
     );
   }
-}
-
-class WebsiteSelectionPage extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() => WebsiteSelectionPageState();
 }
