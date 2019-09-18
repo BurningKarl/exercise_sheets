@@ -7,9 +7,6 @@ import 'WebsiteSelectionPage.dart';
 
 void main() => runApp(MyApp());
 
-// TODO: A provider for websites and a provider for documents is needed as well
-// There is no need for the database provider to provide a future
-
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseState with ChangeNotifier {
+  bool databaseError = false;
   sqflite.Database database;
   List<Map<String, dynamic>> _websites = [];
   List<Map<String, dynamic>> _documents = [];
@@ -16,7 +17,9 @@ class DatabaseState with ChangeNotifier {
       database = await sqflite.openDatabase('exercise_sheets.db', version: 1,
           onCreate: (sqflite.Database db, int version) async {
         await db.execute(
-            'CREATE TABLE websites (id INTEGER PRIMARY KEY, name TEXT, url TEXT, maximumPoints INTEGER, username TEXT, password TEXT)');
+            'CREATE TABLE websites (id INTEGER PRIMARY KEY, name TEXT, url TEXT, maximumPoints DOUBLE, username TEXT, password TEXT)');
+        await db.execute(
+            'CREATE TABLE documents (id INTEGER PRIMARY KEY, website_id INTEGER, name TEXT, url TEXT, points DOUBLE, maximumPoints DOUBLE)');
         await db.insert('websites', {
           'name': 'GeoTopo',
           'url': 'https://www.math.uni-bonn.de/people/ursula/courses.html',
@@ -30,7 +33,8 @@ class DatabaseState with ChangeNotifier {
 
       return database;
     }).catchError((error) {
-      // TODO: Show a SnackBar
+      databaseError = true;
+      notifyListeners();
     });
   }
 

@@ -33,7 +33,12 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
 
   Widget buildContent() {
     return Consumer<DatabaseState>(
-      builder: (context, DatabaseState databaseState, _) {
+      builder: (context, databaseState, _) {
+        if (databaseState.databaseError) {
+          return Center(
+            child: Text('The database could not be opened'),
+          );
+        }
         return ListView(
             children: databaseState.websites.map(buildWebsiteCard).toList());
       },
