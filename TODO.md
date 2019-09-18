@@ -23,5 +23,6 @@ The app also downloads all documents to the local storage (`localstorage`)
 * Split up the code into different files
 * Create the databases and fill them with testing data
 * Build the front end using a new class for every page
+* Add dialogs for adding new websites and modifying existing ones
 * Fill the documents table with data from the internet
 * Download the PDF files from the sites
