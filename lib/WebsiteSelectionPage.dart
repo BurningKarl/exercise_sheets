@@ -6,27 +6,32 @@ import 'package:provider/provider.dart';
 import 'DatabaseState.dart';
 
 class WebsiteSelectionPage extends StatelessWidget {
-  Card buildWebsiteCard(Map<String, dynamic> website) {
-    return Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            leading: Icon(Icons.view_list),
-            title: Text(website['name']),
-            subtitle: Text('Points: ' + website['maximumPoints'].toString()),
-            onTap: () {
-              // TODO: Add route to DocumentSelectionPage here
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget buildContent() {
     return Consumer<DatabaseState>(
       builder: (context, databaseState, _) {
+        Card buildWebsiteCard(Map<String, dynamic> website) {
+          return Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.view_list),
+                  title: Text(website['name']),
+                  subtitle:
+                      Text('Points: ' + website['maximumPoints'].toString()),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute<void>(
+                      builder: (context) {
+                        return DocumentSelectionPage(website['id']);
+                      }
+                    ));
+                  },
+                ),
+              ],
+            ),
+          );
+        }
+
         if (databaseState.databaseError) {
           return Center(
             child: Text('The database could not be opened'),
@@ -40,9 +45,10 @@ class WebsiteSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Add a refresh button to the app bar & pull to refresh
     return Scaffold(
       appBar: AppBar(
-        title: Text('Exercise Sheets'),
+        title: Text('Exercise sheets'),
       ),
       body: buildContent(),
     );

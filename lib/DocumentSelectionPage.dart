@@ -15,9 +15,9 @@ class DocumentSelectionPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            leading: Icon(Icons.view_list),
+            leading: Icon(Icons.assignment),
             title: Text(document['name']),
-            subtitle: Text('Points: ' + document['maximumPoints'].toString()),
+            subtitle: Text('Points: ' + document['points'].toString() + '/' + document['maximumPoints'].toString()),
             onTap: () {},
           ),
         ],
@@ -46,8 +46,9 @@ class DocumentSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // TODO: Find the website with the correct websiteId
       appBar: AppBar(
-        title: Text('Exercise Sheets'),
+        title: Text(Provider.of<DatabaseState>(context).websites.first['name']),
       ),
       body: buildContent(),
     );

@@ -7,7 +7,6 @@ class DatabaseState with ChangeNotifier {
   List<Map<String, dynamic>> _websites = [];
   List<Map<String, dynamic>> _documents = [];
 
-
   DatabaseState(context) {
     openDatabase(context);
   }
@@ -18,12 +17,19 @@ class DatabaseState with ChangeNotifier {
           onCreate: (sqflite.Database db, int version) async {
         await db.execute(
             'CREATE TABLE websites (id INTEGER PRIMARY KEY, name TEXT, url TEXT, maximumPoints DOUBLE, username TEXT, password TEXT)');
-        await db.execute(
-            'CREATE TABLE documents (id INTEGER PRIMARY KEY, website_id INTEGER, name TEXT, url TEXT, points DOUBLE, maximumPoints DOUBLE)');
         await db.insert('websites', {
           'name': 'GeoTopo',
           'url': 'https://www.math.uni-bonn.de/people/ursula/courses.html',
           'maximumPoints': 50
+        });
+        await db.execute(
+            'CREATE TABLE documents (id INTEGER PRIMARY KEY, website_id INTEGER, name TEXT, url TEXT, points DOUBLE, maximumPoints DOUBLE)');
+        await db.insert('documents', {
+          'website_id': 1,
+          'name': 'Übungsblatt 12',
+          'url': 'http://www.math.uni-bonn.de/people/ursula/uebungss1912.pdf',
+          'points': 20,
+          'maximumPoints': 50,
         });
       });
 
@@ -43,7 +49,6 @@ class DatabaseState with ChangeNotifier {
   set websites(List<Map<String, dynamic>> value) {
     _websites = value;
     notifyListeners();
-
   }
 
   List<Map<String, dynamic>> get documents => _documents;
