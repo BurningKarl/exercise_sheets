@@ -1,23 +1,24 @@
-import 'package:exercise_sheets/DatabaseState.dart';
-import 'package:exercise_sheets/DocumentSelectionPage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
-class WebsiteSelectionPage extends StatelessWidget {
-  Card buildWebsiteCard(Map<String, dynamic> website) {
+class DocumentSelectionPage extends StatelessWidget {
+  final int websiteId;
+
+  const DocumentSelectionPage(this.websiteId);
+
+  Card buildDocumentCard(Map<String, dynamic> document) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
             leading: Icon(Icons.view_list),
-            title: Text(website['name']),
-            subtitle: Text('Points: ' + website['maximumPoints'].toString()),
-            onTap: () {
-              // TODO: Add route to DocumentSelectionPage here
-            },
+            title: Text(document['name']),
+            subtitle: Text('Points: ' + document['maximumPoints'].toString()),
+            onTap: () {},
           ),
         ],
       ),
@@ -33,7 +34,11 @@ class WebsiteSelectionPage extends StatelessWidget {
           );
         }
         return ListView(
-            children: databaseState.websites.map(buildWebsiteCard).toList());
+          children: databaseState.documents
+              .where((document) => document['website_id'] == websiteId)
+              .map(buildDocumentCard)
+              .toList(),
+        );
       },
     );
   }
