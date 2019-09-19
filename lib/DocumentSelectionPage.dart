@@ -17,7 +17,10 @@ class DocumentSelectionPage extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.assignment),
             title: Text(document['name']),
-            subtitle: Text('Points: ' + document['points'].toString() + '/' + document['maximumPoints'].toString()),
+            subtitle: Text('Points: ' +
+                document['points'].toString() +
+                '/' +
+                document['maximumPoints'].toString()),
             onTap: () {},
           ),
         ],
@@ -45,10 +48,12 @@ class DocumentSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Add a refresh button to the app bar & pull to refresh
+    // https://github.com/flutter/flutter/blob/master/examples/flutter_gallery/lib/demo/material/overscroll_demo.dart
     return Scaffold(
-      // TODO: Find the website with the correct websiteId
       appBar: AppBar(
-        title: Text(Provider.of<DatabaseState>(context).websites.first['name']),
+        title: Text(Provider.of<DatabaseState>(context)
+            .websiteIdToWebsite[websiteId]['name']),
       ),
       body: buildContent(),
     );

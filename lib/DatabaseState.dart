@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseState with ChangeNotifier {
-  bool databaseError = false;
   sqflite.Database database;
+  bool databaseError = false;
   List<Map<String, dynamic>> _websites = [];
+  Map<int, Map<String, dynamic>> _websiteIdToWebsite = Map();
   List<Map<String, dynamic>> _documents = [];
 
   DatabaseState(context) {
@@ -33,8 +34,8 @@ class DatabaseState with ChangeNotifier {
         });
       });
 
-      _websites = await database.query('websites');
-      _documents = await database.query('documents');
+      websites = await database.query('websites');
+      documents = await database.query('documents');
       notifyListeners();
 
       return database;
@@ -48,8 +49,14 @@ class DatabaseState with ChangeNotifier {
 
   set websites(List<Map<String, dynamic>> value) {
     _websites = value;
+    _websiteIdToWebsite.clear();
+    for (Map<String, dynamic> website in websites) {
+      _websiteIdToWebsite[website['id']] = website;
+    }
     notifyListeners();
   }
+
+  Map<int, Map<String, dynamic>> get websiteIdToWebsite => _websiteIdToWebsite;
 
   List<Map<String, dynamic>> get documents => _documents;
 
