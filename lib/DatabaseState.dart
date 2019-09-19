@@ -1,12 +1,43 @@
+import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseState with ChangeNotifier {
+  // The states stored by the database
   sqflite.Database database;
   bool databaseError = false;
   List<Map<String, dynamic>> _websites = [];
   Map<int, Map<String, dynamic>> _websiteIdToWebsite = Map();
   List<Map<String, dynamic>> _documents = [];
+
+  List<Map<String, dynamic>> get websites => _websites;
+
+  set websites(List<Map<String, dynamic>> value) {
+    _websites = value;
+    _websiteIdToWebsite.clear();
+    for (Map<String, dynamic> website in websites) {
+      _websiteIdToWebsite[website['id']] = website;
+    }
+    notifyListeners();
+  }
+
+  // TODO: Refactor websiteIdToWebsite to a function
+  Map<int, Map<String, dynamic>> get websiteIdToWebsite => _websiteIdToWebsite;
+
+  List<Map<String, dynamic>> get documents => _documents;
+
+  set documents(List<Map<String, dynamic>> value) {
+    _documents = value;
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> websiteIdToDocuments(int websiteId) {
+    return documents
+        .where((document) => document['website_id'] == websiteId)
+        .toList();
+  }
+
+  // The real functions start here
 
   DatabaseState(context) {
     openDatabase(context);
@@ -36,7 +67,6 @@ class DatabaseState with ChangeNotifier {
 
       websites = await database.query('websites');
       documents = await database.query('documents');
-      notifyListeners();
 
       return database;
     }).catchError((error) {
@@ -45,29 +75,12 @@ class DatabaseState with ChangeNotifier {
     });
   }
 
-  List<Map<String, dynamic>> get websites => _websites;
-
-  set websites(List<Map<String, dynamic>> value) {
-    _websites = value;
-    _websiteIdToWebsite.clear();
-    for (Map<String, dynamic> website in websites) {
-      _websiteIdToWebsite[website['id']] = website;
-    }
-    notifyListeners();
-  }
-
-  Map<int, Map<String, dynamic>> get websiteIdToWebsite => _websiteIdToWebsite;
-
-  List<Map<String, dynamic>> get documents => _documents;
-
-  set documents(List<Map<String, dynamic>> value) {
-    _documents = value;
-    notifyListeners();
-  }
-
-  List<Map<String, dynamic>> websiteIdToDocuments(int websiteId) {
-    return documents
-        .where((document) => document['website_id'] == websiteId)
-        .toList();
+  Future<void> updateDocumentMetadata(int websiteId) {
+    Map<String, dynamic> website = websiteIdToWebsite[websiteId];
+    return NetworkOperations.retrieveDocumentMetadata(
+            website['url'], website['username'], website['password'])
+        .then((List<Map<String, dynamic>> values) {
+      // TODO: Update the SQLite database
+    });
   }
 }

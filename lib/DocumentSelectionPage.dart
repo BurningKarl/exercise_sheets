@@ -40,7 +40,7 @@ class DocumentSelectionPage extends StatelessWidget {
         }
         return RefreshIndicator(
           onRefresh: () {
-            return Future.delayed(Duration(seconds: 2));
+            return databaseState.updateDocumentMetadata(websiteId);
           },
           child: Scrollbar(
             child: ListView.builder(
