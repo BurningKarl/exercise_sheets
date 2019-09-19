@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'DatabaseState.dart';
 
 class WebsiteSelectionPage extends StatelessWidget {
-  Card buildWebsiteCard(context, Map<String, dynamic> website) {
+  Card buildWebsiteCard(BuildContext context, Map<String, dynamic> website) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -35,11 +35,17 @@ class WebsiteSelectionPage extends StatelessWidget {
   Widget buildContent() {
     return Consumer<DatabaseState>(
       builder: (context, databaseState, _) {
-        return ListView.builder(
-            itemCount: databaseState.websites.length,
-            itemBuilder: (context, int index) {
-              return buildWebsiteCard(context, databaseState.websites[index]);
-            });
+        if (databaseState.databaseError) {
+          return Center(
+            child: Text('The database could not be opened'),
+          );
+        } else {
+          return ListView.builder(
+              itemCount: databaseState.websites.length,
+              itemBuilder: (context, int index) {
+                return buildWebsiteCard(context, databaseState.websites[index]);
+              });
+        }
       },
     );
   }

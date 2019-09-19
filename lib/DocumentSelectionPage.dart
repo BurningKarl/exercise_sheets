@@ -9,7 +9,7 @@ class DocumentSelectionPage extends StatelessWidget {
 
   const DocumentSelectionPage(this.websiteId);
 
-  Card buildDocumentCard(Map<String, dynamic> document) {
+  Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -31,16 +31,24 @@ class DocumentSelectionPage extends StatelessWidget {
   Widget buildContent() {
     return Consumer<DatabaseState>(
       builder: (context, databaseState, _) {
+        List<Map<String, dynamic>> documents =
+            databaseState.websiteIdToDocuments(websiteId);
         if (databaseState.databaseError) {
           return Center(
             child: Text('The database could not be opened'),
           );
         }
-        return ListView(
-          children: databaseState.documents
-              .where((document) => document['website_id'] == websiteId)
-              .map(buildDocumentCard)
-              .toList(),
+        return RefreshIndicator(
+          onRefresh: () {
+            return Future.delayed(Duration(seconds: 2));
+          },
+          child: Scrollbar(
+            child: ListView.builder(
+                itemCount: documents.length,
+                itemBuilder: (context, int index) {
+                  return buildDocumentCard(context, documents[index]);
+                }),
+          ),
         );
       },
     );
@@ -48,8 +56,6 @@ class DocumentSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Add a refresh button to the app bar & pull to refresh
-    // https://github.com/flutter/flutter/blob/master/examples/flutter_gallery/lib/demo/material/overscroll_demo.dart
     return Scaffold(
       appBar: AppBar(
         title: Text(Provider.of<DatabaseState>(context)

@@ -64,4 +64,10 @@ class DatabaseState with ChangeNotifier {
     _documents = value;
     notifyListeners();
   }
+
+  List<Map<String, dynamic>> websiteIdToDocuments(int websiteId) {
+    return documents
+        .where((document) => document['website_id'] == websiteId)
+        .toList();
+  }
 }
