@@ -6,26 +6,34 @@ class NetworkOperations {
   static Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url, String username, String password) async {
     // TODO: Support basic authentication
-    var response = await http.get(url);
-    if (response.statusCode != 200) {
-      throw http.ClientException('Unexpected response code ' +
-          response.statusCode.toString() +
-          ' when connecting to ' +
-          url);
-    } else {
-      print(response.body);
-      Document htmlDocument = parse(response.body);
-      for (Element element in htmlDocument.getElementsByTagName('a')) {
-        if (element.attributes.containsKey('href') &&
-            element.attributes['href'].endsWith('.pdf')) {
-          print(element.attributes['href']);
-        }
+    Document htmlDocument = parse(await http.read(url));
+
+    List<Element> documentElements =
+        htmlDocument.getElementsByTagName('a').where((Element element) {
+      return element.attributes.containsKey('href') &&
+          element.attributes['href'].endsWith('.pdf');
+    }).toList();
+
+    List<Map<String, dynamic>> documents = List();
+
+    for (Element documentElement in documentElements) {
+      http.Response response =
+          await http.head(documentElement.attributes['href']);
+
+      if (response.reasonPhrase == 'OK') {
+        print('OK');
+        assert(response.headers['content-type'] == 'application/pdf');
+        assert(response.headers.containsKey('last-modified'));
       }
+
+      documents.add({
+        'name': documentElement.innerHtml,
+        'url': documentElement.attributes['href'],
+        'lastModified': response.headers['last-modified'],
+        'statusCodeReason': response.reasonPhrase,
+      });
     }
 
-    // TODO: Receive the document metadata by HEAD requests
-    // TODO: Translate the data into a usable format
-
-    return List();
+    return documents;
   }
 }
