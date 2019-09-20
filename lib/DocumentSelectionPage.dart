@@ -59,7 +59,7 @@ class DocumentSelectionPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(Provider.of<DatabaseState>(context)
-            .websiteIdToWebsite[websiteId]['name']),
+            .websiteIdToWebsite(websiteId)['name']),
       ),
       body: buildContent(),
     );

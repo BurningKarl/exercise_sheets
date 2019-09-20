@@ -7,22 +7,18 @@ class DatabaseState with ChangeNotifier {
   sqflite.Database database;
   bool databaseError = false;
   List<Map<String, dynamic>> _websites = [];
-  Map<int, Map<String, dynamic>> _websiteIdToWebsite = Map();
   List<Map<String, dynamic>> _documents = [];
 
   List<Map<String, dynamic>> get websites => _websites;
 
   set websites(List<Map<String, dynamic>> value) {
     _websites = value;
-    _websiteIdToWebsite.clear();
-    for (Map<String, dynamic> website in websites) {
-      _websiteIdToWebsite[website['id']] = website;
-    }
     notifyListeners();
   }
 
-  // TODO: Refactor websiteIdToWebsite to a function
-  Map<int, Map<String, dynamic>> get websiteIdToWebsite => _websiteIdToWebsite;
+  Map<String, dynamic> websiteIdToWebsite(int websiteId) {
+    return websites.firstWhere((website) => website['id'] == websiteId);
+  }
 
   List<Map<String, dynamic>> get documents => _documents;
 
@@ -65,8 +61,9 @@ class DatabaseState with ChangeNotifier {
         });
       });
 
-      websites = await database.query('websites');
-      documents = await database.query('documents');
+      _websites = await database.query('websites');
+      _documents = await database.query('documents');
+      notifyListeners();
 
       return database;
     }).catchError((error) {
@@ -76,7 +73,7 @@ class DatabaseState with ChangeNotifier {
   }
 
   Future<void> updateDocumentMetadata(int websiteId) {
-    Map<String, dynamic> website = websiteIdToWebsite[websiteId];
+    Map<String, dynamic> website = websiteIdToWebsite(websiteId);
     return NetworkOperations.retrieveDocumentMetadata(
             website['url'], website['username'], website['password'])
         .then((List<Map<String, dynamic>> values) {
