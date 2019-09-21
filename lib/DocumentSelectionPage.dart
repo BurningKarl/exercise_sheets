@@ -4,6 +4,11 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
+// TODO: Display different leading icons
+//  checked, if points are set
+//  crossed, if document is inaccessible
+// TODO: Display the item according to orderOnWebsite
+
 class DocumentSelectionPage extends StatelessWidget {
   final int websiteId;
 

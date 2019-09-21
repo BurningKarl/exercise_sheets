@@ -28,11 +28,10 @@ class NetworkOperations {
         assert(response.headers.containsKey('last-modified'));
       }
 
-      // TODO: Check why every 'titleOnWebsite' starts with a newline
       // TODO: Check why umlauts are not displayed correctly
       documents.add({
         'url': documentElement.attributes['href'],
-        'titleOnWebsite': documentElement.innerHtml,
+        'titleOnWebsite': documentElement.innerHtml.replaceAll('\n', '').trim(),
         'statusCodeReason': response.reasonPhrase,
         'lastModified': response.headers.containsKey('last-modified')
             ? HttpDate.parse(response.headers['last-modified']).toString()
