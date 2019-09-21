@@ -33,6 +33,11 @@ class DatabaseState with ChangeNotifier {
         .toList();
   }
 
+  int urlToDocumentId(String url) {
+    return documents.firstWhere((document) => document['url'] == url,
+        orElse: () => {'id': null})['id'];
+  }
+
   // The real functions start here
 
   DatabaseState(context) {
@@ -81,8 +86,37 @@ class DatabaseState with ChangeNotifier {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
     return NetworkOperations.retrieveDocumentMetadata(
             website['url'], website['username'], website['password'])
-        .then((List<Map<String, dynamic>> values) {
-      // TODO: Update the SQLite database
+        .then((List<Map<String, dynamic>> documentsOnWebsite) async {
+      sqflite.Batch updatesBatch = database.batch();
+      for (Map<String, dynamic> document in documentsOnWebsite) {
+        int documentId = urlToDocumentId(document['url']);
+        if (documentId == null) {
+          document.addAll({
+            'website_id': websiteId,
+            'title': document['titleOnWebsite'],
+            'pinned': 0,
+            'maximumPoints': website['maximumPoints'],
+          });
+          updatesBatch.insert('documents', document);
+          print('Inserted');
+        } else {
+          updatesBatch.update('documents', document,
+              where: 'id = ?', whereArgs: [documentId]);
+          print('Updated');
+        }
+      }
+
+      // TODO: Check why this deletes all inserted documents
+//      List<dynamic> documentUrls =
+//          documentsOnWebsite.map((document) => document['url']).toList();
+//      updatesBatch.delete('documents',
+//          where: 'url NOT IN (?)', whereArgs: [documentUrls.join(', ')]);
+
+      await updatesBatch.commit(noResult: true);
+
+      _websites = await database.query('websites');
+      _documents = await database.query('documents');
+      notifyListeners();
     });
   }
 }
