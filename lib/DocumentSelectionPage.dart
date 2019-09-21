@@ -16,7 +16,7 @@ class DocumentSelectionPage extends StatelessWidget {
         children: <Widget>[
           ListTile(
             leading: Icon(Icons.assignment),
-            title: Text(document['name']),
+            title: Text(document['title']),
             subtitle: Text('Points: ' +
                 document['points'].toString() +
                 '/' +

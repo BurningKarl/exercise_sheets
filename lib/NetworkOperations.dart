@@ -17,7 +17,8 @@ class NetworkOperations {
 
     List<Map<String, dynamic>> documents = List();
 
-    for (Element documentElement in documentElements) {
+    for (int i = 0; i < documentElements.length; ++i) {
+      Element documentElement = documentElements[i];
       http.Response response =
           await http.head(documentElement.attributes['href']);
 
@@ -27,13 +28,16 @@ class NetworkOperations {
         assert(response.headers.containsKey('last-modified'));
       }
 
+      // TODO: Check why every 'titleOnWebsite' starts with a newline
+      // TODO: Check why umlauts are not displayed correctly
       documents.add({
-        'titleOnWebsite': documentElement.innerHtml,
         'url': documentElement.attributes['href'],
-        'lastModified': response.headers.containsKey('last-modified')
-            ? HttpDate.parse(response.headers['last-modified'])
-            : null,
+        'titleOnWebsite': documentElement.innerHtml,
         'statusCodeReason': response.reasonPhrase,
+        'lastModified': response.headers.containsKey('last-modified')
+            ? HttpDate.parse(response.headers['last-modified']).toString()
+            : null,
+        'orderOnWebsite': i,
       });
     }
 
