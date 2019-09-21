@@ -4,9 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
-// TODO: Display different leading icons
-//  checked, if points are set
-//  crossed, if document is inaccessible
 // TODO: Display the item according to orderOnWebsite
 
 class DocumentSelectionPage extends StatelessWidget {
@@ -15,12 +12,21 @@ class DocumentSelectionPage extends StatelessWidget {
   const DocumentSelectionPage(this.websiteId);
 
   Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
+    var leadingIconSymbol;
+    if (document['statusCodeReason'] != 'OK') {
+      leadingIconSymbol = Icons.assignment_late;
+    } else if (document['points'] != null) {
+      leadingIconSymbol = Icons.assignment_turned_in;
+    } else {
+      leadingIconSymbol = Icons.assignment;
+    }
+
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            leading: Icon(Icons.assignment),
+            leading: Icon(leadingIconSymbol),
             title: Text(document['title']),
             subtitle: Text('Points: ' +
                 document['points'].toString() +
