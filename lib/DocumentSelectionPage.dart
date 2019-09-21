@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
-// TODO: Display the item according to orderOnWebsite
-
 class DocumentSelectionPage extends StatelessWidget {
   final int websiteId;
 
@@ -36,6 +34,8 @@ class DocumentSelectionPage extends StatelessWidget {
               icon: Icon(Icons.info),
               onPressed: () {
                 print('Info button pressed');
+                // TODO: Open info screen for this document
+                // with the option to pin the document to the top
               },
             ),
             onTap: () {

@@ -44,6 +44,12 @@ class DatabaseState with ChangeNotifier {
     openDatabase(context);
   }
 
+  Future<void> loadFromDatabase() async {
+    _websites = await database.query('websites');
+    _documents = await database.query('documents', orderBy: 'orderOnWebsite');
+    notifyListeners();
+  }
+
   Future<sqflite.Database> openDatabase(context) {
     return Future(() async {
       database = await sqflite.openDatabase('exercise_sheets.db', version: 1,
@@ -86,9 +92,7 @@ class DatabaseState with ChangeNotifier {
         });
       });
 
-      _websites = await database.query('websites');
-      _documents = await database.query('documents');
-      notifyListeners();
+      await loadFromDatabase();
 
       return database;
     }).catchError((error) {
@@ -129,9 +133,7 @@ class DatabaseState with ChangeNotifier {
 
       await updatesBatch.commit(noResult: true);
 
-      _websites = await database.query('websites');
-      _documents = await database.query('documents');
-      notifyListeners();
+      loadFromDatabase();
     });
   }
 }
