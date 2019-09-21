@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
@@ -20,16 +21,18 @@ class NetworkOperations {
       http.Response response =
           await http.head(documentElement.attributes['href']);
 
+      print(response.reasonPhrase);
       if (response.reasonPhrase == 'OK') {
-        print('OK');
         assert(response.headers['content-type'] == 'application/pdf');
         assert(response.headers.containsKey('last-modified'));
       }
 
       documents.add({
-        'name': documentElement.innerHtml,
+        'titleOnWebsite': documentElement.innerHtml,
         'url': documentElement.attributes['href'],
-        'lastModified': response.headers['last-modified'],
+        'lastModified': response.headers.containsKey('last-modified')
+            ? HttpDate.parse(response.headers['last-modified'])
+            : null,
         'statusCodeReason': response.reasonPhrase,
       });
     }

@@ -21,7 +21,15 @@ class DocumentSelectionPage extends StatelessWidget {
                 document['points'].toString() +
                 '/' +
                 document['maximumPoints'].toString()),
-            onTap: () {},
+            trailing: IconButton(
+              icon: Icon(Icons.info),
+              onPressed: () {
+                print('Info button pressed');
+              },
+            ),
+            onTap: () {
+              print('Document ListTile pressed');
+            },
           ),
         ],
       ),
