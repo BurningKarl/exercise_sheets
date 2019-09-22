@@ -58,40 +58,37 @@ class DocumentSelectionPage extends StatelessWidget {
     );
   }
 
-  Widget buildContent() {
-    return Consumer<DatabaseState>(
-      builder: (context, databaseState, _) {
-        List<Map<String, dynamic>> documents =
-            databaseState.websiteIdToDocuments(websiteId);
-        if (databaseState.databaseError) {
-          return Center(
-            child: Text('The database could not be opened'),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () {
-            return databaseState.updateDocumentMetadata(websiteId);
-          },
-          child: Scrollbar(
-            child: ListView.builder(
-                itemCount: documents.length,
-                itemBuilder: (context, int index) {
-                  return buildDocumentCard(context, documents[index]);
-                }),
-          ),
-        );
+  Widget buildContent(BuildContext context, DatabaseState databaseState) {
+    List<Map<String, dynamic>> documents =
+        databaseState.websiteIdToDocuments(websiteId);
+    if (databaseState.databaseError) {
+      return Center(
+        child: Text('The database could not be opened'),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () {
+        return databaseState.updateDocumentMetadata(websiteId);
       },
+      child: Scrollbar(
+        child: ListView.builder(
+            itemCount: documents.length,
+            itemBuilder: (context, int index) {
+              return buildDocumentCard(context, documents[index]);
+            }),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(Provider.of<DatabaseState>(context)
-            .websiteIdToWebsite(websiteId)['name']),
-      ),
-      body: buildContent(),
-    );
+    return Consumer<DatabaseState>(builder: (context, databaseState, _) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(databaseState.websiteIdToWebsite(websiteId)['name']),
+        ),
+        body: buildContent(context, databaseState),
+      );
+    });
   }
 }

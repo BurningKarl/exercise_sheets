@@ -10,31 +10,26 @@ class DocumentInfoPage extends StatelessWidget {
 
   DocumentInfoPage(this.documentId);
 
-  Widget buildContent() {
-    return Consumer<DatabaseState> (
-      builder: (context, database, _) {
-        return Form(
-          key: _formKey,
-          child: Scrollbar(
-            child: ListView(
-              children: <Widget>[
-                TextFormField()
-              ],
-            ),
-          ),
-        );
-      },
+  Widget buildContent(BuildContext context, DatabaseState database) {
+    return Form(
+      key: _formKey,
+      child: Scrollbar(
+        child: ListView(
+          children: <Widget>[TextFormField()],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(Provider.of<DatabaseState>(context)
-            .documentIdToDocument(documentId)['title']),
-      ),
-      body: buildContent(),
-    );
+    return Consumer<DatabaseState>(builder: (context, databaseState, _) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(databaseState.documentIdToDocument(documentId)['title']),
+        ),
+        body: buildContent(context, databaseState),
+      );
+    });
   }
 }

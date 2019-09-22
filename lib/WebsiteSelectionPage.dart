@@ -32,32 +32,32 @@ class WebsiteSelectionPage extends StatelessWidget {
     );
   }
 
-  Widget buildContent() {
-    return Consumer<DatabaseState>(
-      builder: (context, databaseState, _) {
-        if (databaseState.databaseError) {
-          return Center(
-            child: Text('The database could not be opened'),
-          );
-        } else {
-          // TODO: Add Scrollbar
-          return ListView.builder(
-              itemCount: databaseState.websites.length,
-              itemBuilder: (context, int index) {
-                return buildWebsiteCard(context, databaseState.websites[index]);
-              });
-        }
-      },
-    );
+  Widget buildContent(BuildContext context, DatabaseState databaseState) {
+    if (databaseState.databaseError) {
+      return Center(
+        child: Text('The database could not be opened'),
+      );
+    } else {
+      return Scrollbar(
+        child: ListView.builder(
+            itemCount: databaseState.websites.length,
+            itemBuilder: (context, int index) {
+              return buildWebsiteCard(context, databaseState.websites[index]);
+            }),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Exercise sheets'),
-      ),
-      body: buildContent(),
+    return Consumer<DatabaseState>(
+      builder: (context, databaseState, _) {
+        return Scaffold(
+            appBar: AppBar(
+              title: Text('Exercise sheets'),
+            ),
+            body: buildContent(context, databaseState));
+      },
     );
   }
 }
