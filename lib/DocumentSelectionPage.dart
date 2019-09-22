@@ -12,7 +12,9 @@ class DocumentSelectionPage extends StatelessWidget {
   Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
     var leadingIconSymbol;
     if (document['statusCodeReason'] != 'OK') {
-      leadingIconSymbol = Icons.assignment_late;
+      leadingIconSymbol = Icons.cancel;
+    } else if (document['pinned'] != 0) {
+      leadingIconSymbol = Icons.star;
     } else if (document['points'] != null) {
       leadingIconSymbol = Icons.assignment_turned_in;
     } else {
