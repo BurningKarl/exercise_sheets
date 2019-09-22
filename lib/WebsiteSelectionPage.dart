@@ -40,6 +40,7 @@ class WebsiteSelectionPage extends StatelessWidget {
             child: Text('The database could not be opened'),
           );
         } else {
+          // TODO: Add Scrollbar
           return ListView.builder(
               itemCount: databaseState.websites.length,
               itemBuilder: (context, int index) {

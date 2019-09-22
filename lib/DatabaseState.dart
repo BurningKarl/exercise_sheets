@@ -16,10 +16,6 @@ class DatabaseState with ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic> websiteIdToWebsite(int websiteId) {
-    return websites.firstWhere((website) => website['id'] == websiteId);
-  }
-
   List<Map<String, dynamic>> get documents => _documents;
 
   set documents(List<Map<String, dynamic>> value) {
@@ -27,10 +23,18 @@ class DatabaseState with ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, dynamic> websiteIdToWebsite(int websiteId) {
+    return websites.firstWhere((website) => website['id'] == websiteId);
+  }
+
   List<Map<String, dynamic>> websiteIdToDocuments(int websiteId) {
     return documents
         .where((document) => document['website_id'] == websiteId)
         .toList();
+  }
+
+  Map<String, dynamic> documentIdToDocument(int documentId) {
+    return documents.firstWhere((document) => document['id'] == documentId);
   }
 
   int urlToDocumentId(String url) {
@@ -135,5 +139,6 @@ class DatabaseState with ChangeNotifier {
 
       loadFromDatabase();
     });
+    // TODO: Catch network errors and show a SnackBar
   }
 }

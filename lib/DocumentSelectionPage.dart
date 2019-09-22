@@ -1,3 +1,4 @@
+import 'package:exercise_sheets/DocumentInfoPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -35,13 +36,21 @@ class DocumentSelectionPage extends StatelessWidget {
             trailing: IconButton(
               icon: Icon(Icons.info),
               onPressed: () {
-                print('Info button pressed');
+                print('Opened info for document ' +
+                    document['title'] +
+                    ' with id ' +
+                    document['id'].toString());
+                Navigator.push(context,
+                    MaterialPageRoute<void>(builder: (context) {
+                  return DocumentInfoPage(document['id']);
+                }));
                 // TODO: Open info screen for this document
                 // with the option to pin the document to the top
               },
             ),
             onTap: () {
               print('Document ListTile pressed');
+              // TODO: Open the PDF document
             },
           ),
         ],
