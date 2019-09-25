@@ -126,10 +126,14 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
         appBar: AppBar(
           title: Text(databaseState.documentIdToDocument(documentId)['title']),
           actions: <Widget>[
-            // TODO: Implement archiving and pinning
             IconButton(
               icon: Icon(Icons.archive),
-              onPressed: () {},
+              onPressed: () {
+                // TODO: Implement archiving and pinning
+//                Map<String, dynamic> document = Map.from(databaseState.documentIdToDocument(documentId));
+//                document['archived'] = 1;
+//                databaseState.setDocument(document);
+              },
             ),
             IconButton(
               icon: Icon(Icons.star_border),

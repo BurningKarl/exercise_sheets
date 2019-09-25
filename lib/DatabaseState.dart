@@ -150,4 +150,10 @@ class DatabaseState with ChangeNotifier {
       _loadFromDatabase();
     });
   }
+
+  Future<void> setDocument(Map<String, dynamic> document) async {
+    await database.update('documents', document,
+        where: 'id = ?', whereArgs: [document['id']]);
+    _loadFromDatabase();
+  }
 }
