@@ -124,6 +124,7 @@ class DocumentSelectionPage extends StatelessWidget {
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.settings),
+              tooltip: 'Settings',
               onPressed: () {
                 // TODO: Open website settings, similar to DocumentInfoPage
               },

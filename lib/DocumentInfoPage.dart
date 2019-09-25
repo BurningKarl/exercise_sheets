@@ -140,6 +140,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
             IconButton(
               icon: Icon(
                   document['archived'] == 0 ? Icons.archive : Icons.unarchive),
+              tooltip: document['archived'] == 0 ? 'Archive' : 'Unarchive',
               onPressed: () {
                 Map<String, dynamic> alteredDocument = Map.from(document);
                 alteredDocument['archived'] = negate(document['archived']);
@@ -149,6 +150,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
             IconButton(
               icon: Icon(
                   document['pinned'] == 0 ? Icons.star_border : Icons.star),
+              tooltip: document['pinned'] == 0 ? 'Pin' : 'Unpin',
               onPressed: () {
                 Map<String, dynamic> alteredDocument = Map.from(document);
                 alteredDocument['pinned'] = negate(document['pinned']);
