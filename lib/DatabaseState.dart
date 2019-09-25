@@ -48,7 +48,7 @@ class DatabaseState with ChangeNotifier {
     openDatabase(context);
   }
 
-  Future<void> loadFromDatabase() async {
+  Future<void> _loadFromDatabase() async {
     _websites = await database.query('websites');
     _documents = await database.query('documents', orderBy: 'orderOnWebsite');
     notifyListeners();
@@ -96,7 +96,7 @@ class DatabaseState with ChangeNotifier {
         });
       });
 
-      await loadFromDatabase();
+      await _loadFromDatabase();
 
       return database;
     }).catchError((error) {
@@ -129,15 +129,16 @@ class DatabaseState with ChangeNotifier {
         }
       }
 
-      // TODO: Check why this deletes all inserted documents
-//      List<dynamic> documentUrls =
-//          documentsOnWebsite.map((document) => document['url']).toList();
-//      updatesBatch.delete('documents',
-//          where: 'url NOT IN (?)', whereArgs: [documentUrls.join(', ')]);
+      String urlList = documentsOnWebsite
+          .map((document) => '"' + document['url'] + '"')
+          .join(', ');
+
+      updatesBatch.rawDelete(
+          'DELETE FROM documents WHERE url NOT IN (' + urlList + ')');
 
       await updatesBatch.commit(noResult: true);
 
-      loadFromDatabase();
+      _loadFromDatabase();
     });
     // TODO: Catch network errors and show a SnackBar
   }
