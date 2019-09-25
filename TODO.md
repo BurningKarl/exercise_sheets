@@ -26,3 +26,4 @@ The app also downloads all documents to the local storage (`localstorage`)
 * Add dialogs for adding new websites and modifying existing ones
 * Fill the documents table with data from the internet
 * Download the PDF files from the sites
+* Export functionality for the document metadata (incl. points)

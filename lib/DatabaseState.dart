@@ -8,6 +8,7 @@ class DatabaseState with ChangeNotifier {
   bool databaseError = false;
   List<Map<String, dynamic>> _websites = [];
   List<Map<String, dynamic>> _documents = [];
+  bool showArchivedDocuments = false;
 
   List<Map<String, dynamic>> get websites => _websites;
 
@@ -50,7 +51,8 @@ class DatabaseState with ChangeNotifier {
 
   Future<void> _loadFromDatabase() async {
     _websites = await database.query('websites');
-    _documents = await database.query('documents', orderBy: 'orderOnWebsite');
+    _documents = await database.query('documents',
+        orderBy: 'pinned DESC, orderOnWebsite ASC', where: 'archived = 0');
     notifyListeners();
   }
 
@@ -79,6 +81,7 @@ class DatabaseState with ChangeNotifier {
             'statusCodeReason TEXT, '
             'lastModified TEXT, '
             'orderOnWebsite INT, '
+            'archived BOOLEAN, '
             'pinned BOOLEAN, '
             'points DOUBLE, '
             'maximumPoints DOUBLE)');
@@ -90,6 +93,7 @@ class DatabaseState with ChangeNotifier {
           'statusCodeReason': 'OK',
           'lastModified': '2019-04-02 15:19:15.000',
           'orderOnWebsite': 1,
+          'archived': 0,
           'pinned': 0,
           'points': 20,
           'maximumPoints': 50,
@@ -117,6 +121,7 @@ class DatabaseState with ChangeNotifier {
           document.addAll({
             'website_id': websiteId,
             'title': document['titleOnWebsite'],
+            'archived': 0,
             'pinned': 0,
             'maximumPoints': website['maximumPoints'],
           });
