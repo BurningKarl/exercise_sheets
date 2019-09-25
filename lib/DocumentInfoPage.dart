@@ -16,6 +16,9 @@ class DocumentInfoPage extends StatefulWidget {
 class DocumentInfoPageState extends State<DocumentInfoPage> {
   final int documentId;
   final _formKey = GlobalKey<FormState>();
+  TextEditingController titleController;
+  TextEditingController pointsController;
+  TextEditingController maximumPointsController;
 
   DocumentInfoPageState(this.documentId);
 
@@ -31,12 +34,19 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
     }
   }
 
-  // TODO: Add submit option to the form
   Widget buildContent(BuildContext context, DatabaseState database) {
     Map<String, dynamic> document = database.documentIdToDocument(documentId);
     String lastModified = document['lastModified'] != null
         ? DateTime.parse(document['lastModified']).toLocal().toString()
         : '';
+
+    // TODO: Move these controllers out of build to avoid setting the cursor to the front
+    titleController = TextEditingController(text: document['title']);
+    pointsController =
+        TextEditingController(text: doubleToString(document['points']));
+    maximumPointsController =
+        TextEditingController(text: doubleToString(document['maximumPoints']));
+
     return Form(
       key: _formKey,
       onWillPop: () async {
@@ -47,36 +57,43 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
           padding: EdgeInsets.all(16),
           children: <Widget>[
             TextFormField(
-              initialValue: document['title'],
-              minLines: 1,
-              maxLines: 2,
+              controller: titleController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Title',
                 icon: Icon(Icons.description),
               ),
+              minLines: 1,
+              maxLines: 2,
+              validator: (String value) {
+                if (value.trim().isEmpty) {
+                  return 'Please enter a name';
+                } else {
+                  return null;
+                }
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: document['titleOnWebsite'],
-              enabled: false,
-              minLines: 1,
-              maxLines: 2,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Title on the website',
                 icon: Icon(Icons.description),
               ),
+              initialValue: document['titleOnWebsite'],
+              enabled: false,
+              minLines: 1,
+              maxLines: 2,
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: lastModified,
-              enabled: false,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Last modified on the website',
                 icon: Icon(Icons.event),
               ),
+              initialValue: lastModified,
+              enabled: false,
             ),
             const SizedBox(
               height: 16,
@@ -86,16 +103,24 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 Expanded(
                   flex: 10,
                   child: TextFormField(
-                    initialValue: doubleToString(document['points']),
-                    keyboardType: TextInputType.numberWithOptions(
-                      signed: false,
-                      decimal: true,
-                    ),
+                    controller: pointsController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       icon: Icon(Icons.assignment_turned_in),
                       labelText: 'Achieved points',
                     ),
+                    keyboardType: TextInputType.numberWithOptions(
+                      signed: false,
+                      decimal: true,
+                    ),
+                    validator: (String value) {
+                      if (value.trim().isNotEmpty &&
+                          double.tryParse(value) == null) {
+                        return 'Enter a number or leave blank';
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
                 ),
                 SizedBox(width: 8),
@@ -110,14 +135,21 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 SizedBox(
                   width: 150,
                   child: TextFormField(
-                    initialValue: doubleToString(document['maximumPoints']),
+                    controller: maximumPointsController,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Maximum points'),
                     keyboardType: TextInputType.numberWithOptions(
                       signed: false,
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Maximum points'),
+                    validator: (String value) {
+                      if (double.tryParse(value) == null) {
+                        return 'Enter a number';
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
                 )
               ],
@@ -156,7 +188,24 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 alteredDocument['pinned'] = negate(document['pinned']);
                 databaseState.setDocument(alteredDocument);
               },
-            )
+            ),
+            IconButton(
+              icon: Icon(Icons.check),
+              tooltip: 'Submit',
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  Map<String, dynamic> alteredDocument = Map.from(document);
+                  alteredDocument.addAll({
+                    'title': titleController.text,
+                    'points': double.tryParse(pointsController.text),
+                    'maximumPoints':
+                        double.tryParse(maximumPointsController.text),
+                  });
+                  databaseState.setDocument(alteredDocument);
+                  Navigator.pop(context);
+                }
+              },
+            ),
           ],
         ),
         body: buildContent(context, databaseState),
