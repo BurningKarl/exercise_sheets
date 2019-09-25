@@ -10,6 +10,14 @@ class DocumentSelectionPage extends StatelessWidget {
 
   const DocumentSelectionPage(this.websiteId);
 
+  String pointsToText(double points) {
+    if (points % 1 == 0) {
+      return points.toStringAsFixed(0);
+    } else {
+      return points.toStringAsFixed(2);
+    }
+  }
+
   Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
     var leadingIconSymbol;
     if (document['statusCodeReason'] != 'OK') {
@@ -22,6 +30,13 @@ class DocumentSelectionPage extends StatelessWidget {
       leadingIconSymbol = Icons.assignment;
     }
 
+    String pointsText = document['points'] != null
+        ? 'Points: ' +
+            pointsToText(document['points']) +
+            '/' +
+            pointsToText(document['maximumPoints'])
+        : '';
+
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -29,10 +44,7 @@ class DocumentSelectionPage extends StatelessWidget {
           ListTile(
             leading: Icon(leadingIconSymbol),
             title: Text(document['title']),
-            subtitle: Text('Points: ' +
-                document['points'].toString() +
-                '/' +
-                document['maximumPoints'].toString()),
+            subtitle: Text(pointsText),
             trailing: IconButton(
               icon: Icon(Icons.info),
               onPressed: () {
