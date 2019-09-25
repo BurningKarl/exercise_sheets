@@ -122,6 +122,17 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(databaseState.documentIdToDocument(documentId)['title']),
+          actions: <Widget>[
+            // TODO: Implement archiving and pinning
+            IconButton(
+              icon: Icon(Icons.archive),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: Icon(Icons.star_border),
+              onPressed: () {},
+            )
+          ],
         ),
         body: buildContent(context, databaseState),
       );
