@@ -19,6 +19,10 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
 
   DocumentInfoPageState(this.documentId);
 
+  String doubleToString(double value) {
+    return value != null ? value.toString() : "";
+  }
+
   // TODO: Add option to pin the document
   Widget buildContent(BuildContext context, DatabaseState database) {
     Map<String, dynamic> document = database.documentIdToDocument(documentId);
@@ -74,7 +78,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 Expanded(
                   flex: 10,
                   child: TextFormField(
-                    initialValue: document['points'] ?? "",
+                    initialValue: doubleToString(document['points']),
                     keyboardType: TextInputType.numberWithOptions(
                       signed: false,
                       decimal: true,
@@ -98,7 +102,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 SizedBox(
                   width: 150,
                   child: TextFormField(
-                    initialValue: document['maximumPoints'].toString(),
+                    initialValue: doubleToString(document['maximumPoints']),
                     keyboardType: TextInputType.numberWithOptions(
                       signed: false,
                       decimal: true,
