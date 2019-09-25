@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:exercise_sheets/DocumentInfoPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -80,7 +81,12 @@ class DocumentSelectionPage extends StatelessWidget {
     }
     return RefreshIndicator(
       onRefresh: () {
-        return databaseState.updateDocumentMetadata(websiteId);
+        return databaseState.updateDocumentMetadata(websiteId).catchError(
+            (error) {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text('A network error occured: \n' + error.toString()),
+          ));
+        }, test: (error) => error is IOException);
       },
       child: Scrollbar(
         child: ListView.builder(
@@ -99,7 +105,10 @@ class DocumentSelectionPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(databaseState.websiteIdToWebsite(websiteId)['name']),
         ),
-        body: buildContent(context, databaseState),
+        body: Builder(
+          // This is necessary to use Scaffold.of(innerContext)
+          builder: (innerContext) => buildContent(innerContext, databaseState),
+        ),
       );
     });
   }

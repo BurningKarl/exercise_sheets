@@ -140,6 +140,5 @@ class DatabaseState with ChangeNotifier {
 
       _loadFromDatabase();
     });
-    // TODO: Catch network errors and show a SnackBar
   }
 }
