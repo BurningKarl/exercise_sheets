@@ -52,7 +52,7 @@ class DatabaseState with ChangeNotifier {
   Future<void> _loadFromDatabase() async {
     _websites = await database.query('websites');
     _documents = await database.query('documents',
-        orderBy: 'pinned DESC, orderOnWebsite ASC', where: 'archived = 0');
+        orderBy: 'pinned DESC, orderOnWebsite ASC');
     notifyListeners();
   }
 
@@ -64,13 +64,16 @@ class DatabaseState with ChangeNotifier {
             'id INTEGER PRIMARY KEY, '
             'name TEXT, '
             'url TEXT, '
-            'maximumPoints DOUBLE, '
             'username TEXT, '
-            'password TEXT)');
+            'password TEXT, '
+            'maximumPoints DOUBLE, '
+            'showArchived BOOLEAN'
+            ')');
         await db.insert('websites', {
           'name': 'GeoTopo',
           'url': 'https://www.math.uni-bonn.de/people/ursula/courses.html',
-          'maximumPoints': 50
+          'maximumPoints': 50,
+          'showArchived': 0,
         });
         await db.execute('CREATE TABLE documents ('
             'id INTEGER PRIMARY KEY, '
@@ -84,7 +87,8 @@ class DatabaseState with ChangeNotifier {
             'archived BOOLEAN, '
             'pinned BOOLEAN, '
             'points DOUBLE, '
-            'maximumPoints DOUBLE)');
+            'maximumPoints DOUBLE'
+            ')');
         await db.insert('documents', {
           'websiteId': 1,
           'url': 'http://www.math.uni-bonn.de/people/ursula/uebungss1912.pdf',

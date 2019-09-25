@@ -23,6 +23,14 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
     return value != null ? value.toString() : "";
   }
 
+  int negate(int value) {
+    if (value == 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   Widget buildContent(BuildContext context, DatabaseState database) {
     Map<String, dynamic> document = database.documentIdToDocument(documentId);
     String lastModified = document['lastModified'] != null
@@ -66,7 +74,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Last modified on the website',
-                icon: Icon(Icons.today),
+                icon: Icon(Icons.event),
               ),
             ),
             const SizedBox(
@@ -122,22 +130,29 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseState>(builder: (context, databaseState, _) {
+      Map<String, dynamic> document =
+          databaseState.documentIdToDocument(documentId);
       return Scaffold(
         appBar: AppBar(
-          title: Text(databaseState.documentIdToDocument(documentId)['title']),
+          title: Text(document['title']),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.archive),
+              icon: Icon(
+                  document['archived'] == 0 ? Icons.archive : Icons.unarchive),
               onPressed: () {
-                // TODO: Implement archiving and pinning
-//                Map<String, dynamic> document = Map.from(databaseState.documentIdToDocument(documentId));
-//                document['archived'] = 1;
-//                databaseState.setDocument(document);
+                Map<String, dynamic> alteredDocument = Map.from(document);
+                alteredDocument['archived'] = negate(document['archived']);
+                databaseState.setDocument(alteredDocument);
               },
             ),
             IconButton(
-              icon: Icon(Icons.star_border),
-              onPressed: () {},
+              icon: Icon(
+                  document['pinned'] == 0 ? Icons.star_border : Icons.star),
+              onPressed: () {
+                Map<String, dynamic> alteredDocument = Map.from(document);
+                alteredDocument['pinned'] = negate(document['pinned']);
+                databaseState.setDocument(alteredDocument);
+              },
             )
           ],
         ),

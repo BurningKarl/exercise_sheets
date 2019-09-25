@@ -23,6 +23,8 @@ class DocumentSelectionPage extends StatelessWidget {
     var leadingIconSymbol;
     if (document['statusCodeReason'] != 'OK') {
       leadingIconSymbol = Icons.cancel;
+    } else if (document['archived'] != 0) {
+      leadingIconSymbol = Icons.archive;
     } else if (document['pinned'] != 0) {
       leadingIconSymbol = Icons.star;
     } else if (document['points'] != null) {
@@ -70,8 +72,13 @@ class DocumentSelectionPage extends StatelessWidget {
   }
 
   Widget buildContent(BuildContext context, DatabaseState databaseState) {
+    Map<String, dynamic> website = databaseState.websiteIdToWebsite(websiteId);
     List<Map<String, dynamic>> documents =
         databaseState.websiteIdToDocuments(websiteId);
+    if (website['showArchived'] == 0) {
+      // Show only those document that are not archived
+      documents.retainWhere((document) => document['archived'] == 0);
+    }
     if (databaseState.databaseError) {
       return Center(
         child: Text('The database could not be opened'),
