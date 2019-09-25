@@ -57,8 +57,6 @@ class DocumentSelectionPage extends StatelessWidget {
                     MaterialPageRoute<void>(builder: (context) {
                   return DocumentInfoPage(document['id']);
                 }));
-                // TODO: Open info screen for this document
-                // with the option to pin the document to the top
               },
             ),
             onTap: () {

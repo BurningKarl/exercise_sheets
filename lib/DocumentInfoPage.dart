@@ -23,7 +23,6 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
     return value != null ? value.toString() : "";
   }
 
-  // TODO: Add option to pin the document
   Widget buildContent(BuildContext context, DatabaseState database) {
     Map<String, dynamic> document = database.documentIdToDocument(documentId);
     String lastModified = document['lastModified'] != null
