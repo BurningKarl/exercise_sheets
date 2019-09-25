@@ -6,10 +6,20 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
+enum DocumentSelectionPageActions { show_hide_archived }
+
 class DocumentSelectionPage extends StatelessWidget {
   final int websiteId;
 
   const DocumentSelectionPage(this.websiteId);
+
+  int negate(int value) {
+    if (value == 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
 
   String pointsToText(double points) {
     if (points % 1 == 0) {
@@ -106,9 +116,31 @@ class DocumentSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseState>(builder: (context, databaseState, _) {
+      Map<String, dynamic> website =
+          databaseState.websiteIdToWebsite(websiteId);
       return Scaffold(
         appBar: AppBar(
           title: Text(databaseState.websiteIdToWebsite(websiteId)['name']),
+          actions: <Widget>[
+            PopupMenuButton<DocumentSelectionPageActions>(
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: DocumentSelectionPageActions.show_hide_archived,
+                  child: Text(website['showArchived'] == 0
+                      ? 'Show archived documents'
+                      : 'Hide archived documents'),
+                )
+              ],
+              onSelected: (DocumentSelectionPageActions value) {
+                if (value == DocumentSelectionPageActions.show_hide_archived) {
+                  Map<String, dynamic> alteredWebsite = Map.from(website);
+                  alteredWebsite['showArchived'] =
+                      negate(alteredWebsite['showArchived']);
+                  databaseState.setWebsite(alteredWebsite);
+                }
+              },
+            )
+          ],
         ),
         body: Builder(
           // This is necessary to use Scaffold.of(innerContext)

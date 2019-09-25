@@ -151,13 +151,19 @@ class DatabaseState with ChangeNotifier {
 
       await updatesBatch.commit(noResult: true);
 
-      _loadFromDatabase();
+      await _loadFromDatabase();
     });
   }
 
   Future<void> setDocument(Map<String, dynamic> document) async {
     await database.update('documents', document,
         where: 'id = ?', whereArgs: [document['id']]);
-    _loadFromDatabase();
+    await _loadFromDatabase();
+  }
+
+  Future<void> setWebsite(Map<String, dynamic> website) async {
+    await database.update('websites', website,
+        where: 'id = ?', whereArgs: [website['id']]);
+    await _loadFromDatabase();
   }
 }
