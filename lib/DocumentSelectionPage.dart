@@ -122,6 +122,12 @@ class DocumentSelectionPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(databaseState.websiteIdToWebsite(websiteId)['name']),
           actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                // TODO: Open website settings, similar to DocumentInfoPage
+              },
+            ),
             PopupMenuButton<DocumentSelectionPageActions>(
               itemBuilder: (context) => [
                 PopupMenuItem(
