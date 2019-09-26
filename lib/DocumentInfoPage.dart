@@ -16,9 +16,9 @@ class DocumentInfoPage extends StatefulWidget {
 class DocumentInfoPageState extends State<DocumentInfoPage> {
   final int documentId;
   final _formKey = GlobalKey<FormState>();
-  TextEditingController titleController;
-  TextEditingController pointsController;
-  TextEditingController maximumPointsController;
+  String titleInput;
+  String pointsInput;
+  String maximumPointsInput;
 
   DocumentInfoPageState(this.documentId);
 
@@ -40,13 +40,6 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
         ? DateTime.parse(document['lastModified']).toLocal().toString()
         : '';
 
-    // TODO: Move these controllers out of build to avoid setting the cursor to the front
-    titleController = TextEditingController(text: document['title']);
-    pointsController =
-        TextEditingController(text: doubleToString(document['points']));
-    maximumPointsController =
-        TextEditingController(text: doubleToString(document['maximumPoints']));
-
     return Form(
       key: _formKey,
       onWillPop: () async {
@@ -57,7 +50,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
           padding: EdgeInsets.all(16),
           children: <Widget>[
             TextFormField(
-              controller: titleController,
+              initialValue: document['title'],
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Title',
@@ -71,6 +64,9 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 } else {
                   return null;
                 }
+              },
+              onSaved: (String value) {
+                titleInput = value;
               },
             ),
             const SizedBox(height: 16),
@@ -103,7 +99,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 Expanded(
                   flex: 10,
                   child: TextFormField(
-                    controller: pointsController,
+                    initialValue: doubleToString(document['points']),
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       icon: Icon(Icons.assignment_turned_in),
@@ -121,6 +117,9 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                         return null;
                       }
                     },
+                    onSaved: (String value) {
+                      pointsInput = value;
+                    },
                   ),
                 ),
                 SizedBox(width: 8),
@@ -135,7 +134,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 SizedBox(
                   width: 150,
                   child: TextFormField(
-                    controller: maximumPointsController,
+                    initialValue: doubleToString(document['maximumPoints']),
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Maximum points'),
@@ -149,6 +148,9 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                       } else {
                         return null;
                       }
+                    },
+                    onSaved: (String value) {
+                      maximumPointsInput = value;
                     },
                   ),
                 )
@@ -194,12 +196,12 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
               tooltip: 'Submit',
               onPressed: () {
                 if (_formKey.currentState.validate()) {
+                  _formKey.currentState.save();
                   Map<String, dynamic> alteredDocument = Map.from(document);
                   alteredDocument.addAll({
-                    'title': titleController.text,
-                    'points': double.tryParse(pointsController.text),
-                    'maximumPoints':
-                        double.tryParse(maximumPointsController.text),
+                    'title': titleInput,
+                    'points': double.tryParse(pointsInput),
+                    'maximumPoints': double.tryParse(maximumPointsInput),
                   });
                   databaseState.setDocument(alteredDocument);
                   Navigator.pop(context);
