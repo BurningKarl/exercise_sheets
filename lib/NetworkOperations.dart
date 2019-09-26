@@ -1,8 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NetworkOperations {
   static Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
@@ -41,5 +42,13 @@ class NetworkOperations {
     }
 
     return documents;
+  }
+
+  static Future<void> launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'package:exercise_sheets/DocumentInfoPage.dart';
+import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import 'DocumentInfoPage.dart';
 import 'DatabaseState.dart';
 
 enum DocumentSelectionPageActions { show_hide_archived }
@@ -71,9 +72,15 @@ class DocumentSelectionPage extends StatelessWidget {
                 }));
               },
             ),
-            onTap: () {
-              print('Document ListTile pressed');
-              // TODO: Open the PDF document
+            onTap: () async {
+              // TODO: Open the local PDF document if possible
+              if (document['statusCodeReason'] == 'OK') {
+                NetworkOperations.launchUrl(document['url']);
+              } else {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text('This document is unreachable: '+document['statusCodeReason']),
+                ));
+              }
             },
           ),
         ],
@@ -99,7 +106,7 @@ class DocumentSelectionPage extends StatelessWidget {
         return databaseState.updateDocumentMetadata(websiteId).catchError(
             (error) {
           Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('A network error occured: \n' + error.toString()),
+            content: Text('A network error occured: \n$error'),
           ));
         }, test: (error) => error is IOException);
       },
@@ -115,17 +122,27 @@ class DocumentSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Move the consumer inside the scaffold to avoid Builder
     return Consumer<DatabaseState>(builder: (context, databaseState, _) {
       Map<String, dynamic> website =
           databaseState.websiteIdToWebsite(websiteId);
       return Scaffold(
         appBar: AppBar(
-          title: Text(databaseState.websiteIdToWebsite(websiteId)['name']),
+          title: Text(website['name']),
           actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.cloud_download),
+              onPressed: () async {
+                //TODO: Download all PDF files of the documents
+                // The icon should change to Icons.cloud_done if none of
+                // the lastModified is newer than the local files
+                // Add columns: file and fileLastModified
+              },
+            ),
             IconButton(
               icon: Icon(Icons.settings),
               tooltip: 'Settings',
-              onPressed: () {
+              onPressed: () async {
                 // TODO: Open website settings, similar to DocumentInfoPage
               },
             ),
