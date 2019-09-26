@@ -1,11 +1,12 @@
 import 'dart:io';
-import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
-import 'DocumentInfoPage.dart';
 import 'DatabaseState.dart';
+import 'NetworkOperations.dart';
+import 'WebsiteInfoPage.dart';
+import 'DocumentInfoPage.dart';
 
 enum DocumentSelectionPageActions { show_hide_archived }
 
@@ -122,7 +123,6 @@ class DocumentSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Move the consumer inside the scaffold to avoid Builder
     return Consumer<DatabaseState>(builder: (context, databaseState, _) {
       Map<String, dynamic> website =
           databaseState.websiteIdToWebsite(websiteId);
@@ -143,7 +143,10 @@ class DocumentSelectionPage extends StatelessWidget {
               icon: Icon(Icons.settings),
               tooltip: 'Settings',
               onPressed: () async {
-                // TODO: Open website settings, similar to DocumentInfoPage
+                Navigator.push(context,
+                    MaterialPageRoute<void>(builder: (context) {
+                      return WebsiteInfoPage(websiteId);
+                    }));
               },
             ),
             PopupMenuButton<DocumentSelectionPageActions>(
