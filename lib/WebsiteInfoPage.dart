@@ -41,7 +41,7 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
           padding: EdgeInsets.all(16),
           children: <Widget>[
             TextFormField(
-              initialValue: website['name'],
+              initialValue: website['title'],
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Title',
@@ -77,34 +77,6 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: website['username'],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Username',
-                icon: Icon(Icons.account_circle),
-              ),
-              onSaved: (String value) {
-                usernameInput = value;
-              },
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            TextFormField(
-              initialValue: website['password'],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Password',
-                icon: Icon(Icons.vpn_key),
-              ),
-              onSaved: (String value) {
-                passwordInput = value;
-              },
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            TextFormField(
               initialValue: doubleToString(website['maximumPoints']),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
@@ -126,6 +98,30 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
                 maximumPointsInput = value;
               },
             ),
+            const SizedBox(height: 16),
+            TextFormField(
+              initialValue: website['username'],
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Username',
+                icon: Icon(Icons.account_circle),
+              ),
+              onSaved: (String value) {
+                usernameInput = value;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              initialValue: website['password'],
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Password',
+                icon: Icon(Icons.vpn_key),
+              ),
+              onSaved: (String value) {
+                passwordInput = value;
+              },
+            ),
           ],
         ),
       ),
@@ -139,8 +135,7 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
           databaseState.websiteIdToWebsite(websiteId);
       return Scaffold(
         appBar: AppBar(
-          // TODO: Rename column 'name' to 'title' to maintain consistency
-          title: Text(website['name']),
+          title: Text(website['title']),
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.check),
@@ -150,7 +145,7 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
                   _formKey.currentState.save();
                   Map<String, dynamic> alteredWebsite = Map.from(website);
                   alteredWebsite.addAll({
-                    'name': titleInput,
+                    'title': titleInput,
                     'url': urlInput,
                     'username': usernameInput,
                     'password': passwordInput,

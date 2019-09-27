@@ -62,15 +62,15 @@ class DatabaseState with ChangeNotifier {
           onCreate: (sqflite.Database db, int version) async {
         await db.execute('CREATE TABLE websites ('
             'id INTEGER PRIMARY KEY, '
-            'name TEXT, '
+            'title TEXT, '
             'url TEXT, '
+            'maximumPoints DOUBLE, '
             'username TEXT, '
             'password TEXT, '
-            'maximumPoints DOUBLE, '
             'showArchived BOOLEAN'
             ')');
         await db.insert('websites', {
-          'name': 'GeoTopo',
+          'title': 'GeoTopo',
           'url': 'https://www.math.uni-bonn.de/people/ursula/courses.html',
           'maximumPoints': 50,
           'showArchived': 0,

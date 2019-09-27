@@ -128,7 +128,7 @@ class DocumentSelectionPage extends StatelessWidget {
           databaseState.websiteIdToWebsite(websiteId);
       return Scaffold(
         appBar: AppBar(
-          title: Text(website['name']),
+          title: Text(website['title']),
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.cloud_download),

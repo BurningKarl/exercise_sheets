@@ -13,11 +13,11 @@ class WebsiteSelectionPage extends StatelessWidget {
         children: <Widget>[
           ListTile(
             leading: Icon(Icons.view_list),
-            title: Text(website['name']),
+            title: Text(website['title']),
             subtitle: Text('Points: ' + website['maximumPoints'].toString()),
             onTap: () {
               print('Opened selection for website ' +
-                  website['name'] +
+                  website['title'] +
                   ' with id ' +
                   website['id'].toString());
 
