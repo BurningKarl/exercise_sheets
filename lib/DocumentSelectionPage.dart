@@ -80,7 +80,8 @@ class DocumentSelectionPage extends StatelessWidget {
                 NetworkOperations.launchUrl(document['url']);
               } else {
                 Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text('This document is unreachable: '+document['statusCodeReason']),
+                  content: Text('This document is unreachable: ' +
+                      document['statusCodeReason']),
                 ));
               }
             },
@@ -110,12 +111,11 @@ class DocumentSelectionPage extends StatelessWidget {
           Scaffold.of(context).showSnackBar(SnackBar(
             content: Text('A network error occured: \n$error'),
           ));
-        }, test: (error) => error is IOException).catchError(
-                (error) {
-              Scaffold.of(context).showSnackBar(SnackBar(
-                content: Text('A network error occured: \n$error'),
-              ));
-            }, test: (error) => error is ClientException);
+        }, test: (error) => error is IOException).catchError((error) {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text('A network error occured: \n$error'),
+          ));
+        }, test: (error) => error is ClientException);
       },
       child: Scrollbar(
         child: ListView.builder(
@@ -151,8 +151,8 @@ class DocumentSelectionPage extends StatelessWidget {
               onPressed: () async {
                 Navigator.push(context,
                     MaterialPageRoute<void>(builder: (context) {
-                      return WebsiteInfoPage(websiteId);
-                    }));
+                  return WebsiteInfoPage(websiteId);
+                }));
               },
             ),
             PopupMenuButton<DocumentSelectionPageActions>(

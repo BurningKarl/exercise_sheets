@@ -132,7 +132,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 ),
                 SizedBox(width: 8),
                 SizedBox(
-                  width: 150,
+                  width: 160,
                   child: TextFormField(
                     initialValue: doubleToString(document['maximumPoints']),
                     decoration: const InputDecoration(
@@ -191,26 +191,26 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 databaseState.setDocument(alteredDocument);
               },
             ),
-            IconButton(
-              icon: Icon(Icons.check),
-              tooltip: 'Submit',
-              onPressed: () {
-                if (_formKey.currentState.validate()) {
-                  _formKey.currentState.save();
-                  Map<String, dynamic> alteredDocument = Map.from(document);
-                  alteredDocument.addAll({
-                    'title': titleInput,
-                    'points': double.tryParse(pointsInput),
-                    'maximumPoints': double.tryParse(maximumPointsInput),
-                  });
-                  databaseState.setDocument(alteredDocument);
-                  Navigator.pop(context);
-                }
-              },
-            ),
           ],
         ),
         body: buildContent(context, databaseState),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.check),
+          tooltip: 'Submit',
+          onPressed: () {
+            if (_formKey.currentState.validate()) {
+              _formKey.currentState.save();
+              Map<String, dynamic> alteredDocument = Map.from(document);
+              alteredDocument.addAll({
+                'title': titleInput,
+                'points': double.tryParse(pointsInput),
+                'maximumPoints': double.tryParse(maximumPointsInput),
+              });
+              databaseState.setDocument(alteredDocument);
+              Navigator.pop(context);
+            }
+          },
+        ),
       );
     });
   }

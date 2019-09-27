@@ -140,29 +140,27 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(website['title']),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.check),
-              tooltip: 'Submit',
-              onPressed: () {
-                if (_formKey.currentState.validate()) {
-                  _formKey.currentState.save();
-                  Map<String, dynamic> alteredWebsite = Map.from(website);
-                  alteredWebsite.addAll({
-                    'title': titleInput,
-                    'url': urlInput,
-                    'username': usernameInput,
-                    'password': passwordInput,
-                    'maximumPoints': maximumPointsInput,
-                  });
-                  databaseState.setWebsite(alteredWebsite);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
         ),
         body: buildContent(context, databaseState),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.check),
+          tooltip: 'Submit',
+          onPressed: () {
+            if (_formKey.currentState.validate()) {
+              _formKey.currentState.save();
+              Map<String, dynamic> alteredWebsite = Map.from(website);
+              alteredWebsite.addAll({
+                'title': titleInput,
+                'url': urlInput,
+                'username': usernameInput,
+                'password': passwordInput,
+                'maximumPoints': maximumPointsInput,
+              });
+              databaseState.setWebsite(alteredWebsite);
+              Navigator.pop(context);
+            }
+          },
+        ),
       );
     });
   }

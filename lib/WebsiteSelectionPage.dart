@@ -53,10 +53,17 @@ class WebsiteSelectionPage extends StatelessWidget {
     return Consumer<DatabaseState>(
       builder: (context, databaseState, _) {
         return Scaffold(
-            appBar: AppBar(
-              title: Text('Exercise sheets'),
-            ),
-            body: buildContent(context, databaseState));
+          appBar: AppBar(
+            title: Text('Exercise sheets'),
+          ),
+          body: buildContent(context, databaseState),
+          floatingActionButton: FloatingActionButton(
+            child: Icon(Icons.add),
+            onPressed: () {
+              // TODO: Open WebsiteInfoPage for a new website
+            },
+          ),
+        );
       },
     );
   }
