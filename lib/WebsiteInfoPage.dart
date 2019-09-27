@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:validators/validators.dart';
 
 import 'DatabaseState.dart';
 
@@ -68,8 +69,11 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
               ),
               keyboardType: TextInputType.url,
               validator: (String value) {
-                // TODO: Validate the url with the package validators
-                return null;
+                if (!isURL(value, requireTld: true, requireProtocol: true)) {
+                  return 'Please enter a valid URL';
+                } else {
+                  return null;
+                }
               },
               onSaved: (String value) {
                 urlInput = value;
