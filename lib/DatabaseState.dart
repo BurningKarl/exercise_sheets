@@ -2,6 +2,49 @@ import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
+class DatabaseDefaults {
+  static const Map<String, dynamic> defaultWebsite = {
+    'title': 'New Website',
+    'url': null,
+    'maximumPoints': 50.0,
+    'username': '',
+    'password': '',
+    'showArchived': 0,
+  };
+
+  static const Map<String, dynamic> defaultDocument = {
+    'websiteId': null,
+    'url': null,
+    'title': 'Default Document',
+    'titleOnWebsite': 'Default Document',
+    'statusCodeReason': 'Bad Request',
+    'lastModified': '1970-01-01 00:00:00.000Z',
+    'orderOnWebsite': 0,
+    'archived': 0,
+    'pinned': 0,
+    'points': null,
+    'maximumPoints': null,
+  };
+
+  static Map<String, dynamic> completeWebsite(
+      Map<String, dynamic> incompleteWebsite,
+      {Map<String, dynamic> defaults}) {
+    Map<String, dynamic> website = defaultWebsite;
+    website.addAll(defaults);
+    website.addAll(incompleteWebsite);
+    return website;
+  }
+
+  static Map<String, dynamic> completeDocument(
+      Map<String, dynamic> incompleteDocument,
+      {Map<String, dynamic> defaults}) {
+    Map<String, dynamic> document = defaultDocument;
+    document.addAll(defaults);
+    document.addAll(incompleteDocument);
+    return document;
+  }
+}
+
 class DatabaseState with ChangeNotifier {
   // The states stored by the database
   sqflite.Database database;
@@ -12,17 +55,7 @@ class DatabaseState with ChangeNotifier {
 
   List<Map<String, dynamic>> get websites => _websites;
 
-//  set websites(List<Map<String, dynamic>> value) {
-//    _websites = value;
-//    notifyListeners();
-//  }
-
   List<Map<String, dynamic>> get documents => _documents;
-
-//  set documents(List<Map<String, dynamic>> value) {
-//    _documents = value;
-//    notifyListeners();
-//  }
 
   Map<String, dynamic> websiteIdToWebsite(int websiteId) {
     return websites.singleWhere((website) => website['id'] == websiteId);
@@ -122,12 +155,9 @@ class DatabaseState with ChangeNotifier {
       for (Map<String, dynamic> document in documentsOnWebsite) {
         int documentId = urlToDocumentId(document['url']);
         if (documentId == null) {
-          // TODO: Store default values for a document in a final variable
-          document.addAll({
+          document = DatabaseDefaults.completeDocument(document, defaults: {
             'websiteId': websiteId,
             'title': document['titleOnWebsite'],
-            'archived': 0,
-            'pinned': 0,
             'maximumPoints': website['maximumPoints'],
           });
           updatesBatch.insert('documents', document);
