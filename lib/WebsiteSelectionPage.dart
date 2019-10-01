@@ -16,10 +16,8 @@ class WebsiteSelectionPage extends StatelessWidget {
             title: Text(website['title']),
             subtitle: Text('Points: ' + website['maximumPoints'].toString()),
             onTap: () {
-              print('Opened selection for website ' +
-                  website['title'] +
-                  ' with id ' +
-                  website['id'].toString());
+              print('Opened selection for website ${website['title']} '
+                  'with id ${website['id']}');
 
               Navigator.push(context,
                   MaterialPageRoute<void>(builder: (context) {

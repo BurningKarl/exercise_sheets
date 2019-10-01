@@ -47,10 +47,8 @@ class DocumentSelectionPage extends StatelessWidget {
     }
 
     String pointsText = document['points'] != null
-        ? 'Points: ' +
-            pointsToText(document['points']) +
-            '/' +
-            pointsToText(document['maximumPoints'])
+        ? 'Points: ${pointsToText(document['points'])}'
+            '/${pointsToText(document['maximumPoints'])}'
         : '';
 
     return Card(
@@ -64,10 +62,8 @@ class DocumentSelectionPage extends StatelessWidget {
             trailing: IconButton(
               icon: Icon(Icons.info),
               onPressed: () {
-                print('Opened info for document ' +
-                    document['title'] +
-                    ' with id ' +
-                    document['id'].toString());
+                print('Opened info for document ${document['title']} '
+                    'with id ${document['id']}');
                 Navigator.push(context,
                     MaterialPageRoute<void>(builder: (context) {
                   return DocumentInfoPage(document['id']);

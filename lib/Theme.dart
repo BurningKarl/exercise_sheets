@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 final ThemeData exerciseSheetsTheme = ThemeData(
-    // This is the theme of the application.
-    primarySwatch: Colors.green,
+  // This is the theme of the application.
+  primarySwatch: Colors.green,
 //    cardTheme: CardTheme(
 //        margin: EdgeInsets.all(7),
 //        shape: RoundedRectangleBorder(

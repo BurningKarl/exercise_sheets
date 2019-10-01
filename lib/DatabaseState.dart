@@ -122,6 +122,7 @@ class DatabaseState with ChangeNotifier {
       for (Map<String, dynamic> document in documentsOnWebsite) {
         int documentId = urlToDocumentId(document['url']);
         if (documentId == null) {
+          // TODO: Store default values for a document in a final variable
           document.addAll({
             'websiteId': websiteId,
             'title': document['titleOnWebsite'],
@@ -132,22 +133,17 @@ class DatabaseState with ChangeNotifier {
           updatesBatch.insert('documents', document);
           print('Inserted');
         } else {
-          updatesBatch.update('documents', document,
-              where: 'id = ?', whereArgs: [documentId]);
+          updatesBatch.update('documents', document, where: 'id = $documentId');
           print('Updated');
         }
       }
 
       String urlList = documentsOnWebsite
-          .map((document) => '"' + document['url'] + '"')
+          .map((document) => '"${document['url']}"')
           .join(', ');
 
-      updatesBatch.rawDelete('DELETE FROM documents ' +
-          'WHERE websiteId = ' +
-          websiteId.toString() +
-          ' AND url NOT IN (' +
-          urlList +
-          ')');
+      updatesBatch.rawDelete('DELETE FROM documents '
+          'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
 
       await updatesBatch.commit(noResult: true);
 
@@ -157,13 +153,12 @@ class DatabaseState with ChangeNotifier {
 
   Future<void> setDocument(Map<String, dynamic> document) async {
     await database.update('documents', document,
-        where: 'id = ?', whereArgs: [document['id']]);
+        where: 'id = ${document['id']}');
     await _loadFromDatabase();
   }
 
   Future<void> setWebsite(Map<String, dynamic> website) async {
-    await database.update('websites', website,
-        where: 'id = ?', whereArgs: [website['id']]);
+    await database.update('websites', website, where: 'id = ${website['id']}');
     await _loadFromDatabase();
   }
 }
