@@ -34,10 +34,6 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
 
     return Form(
       key: _formKey,
-      onWillPop: () async {
-        // TODO: Add a warning, if changes were made
-        return true;
-      },
       child: Scrollbar(
         child: ListView(
           padding: EdgeInsets.all(16),

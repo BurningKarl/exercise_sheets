@@ -64,10 +64,11 @@ class DocumentSelectionPage extends StatelessWidget {
               onPressed: () {
                 print('Opened info for document ${document['title']} '
                     'with id ${document['id']}');
-                Navigator.push(context,
-                    MaterialPageRoute<void>(builder: (context) {
-                  return DocumentInfoPage(document['id']);
-                }));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => DocumentInfoPage(document['id']),
+                    ));
               },
             ),
             onTap: () async {
@@ -145,10 +146,11 @@ class DocumentSelectionPage extends StatelessWidget {
               icon: Icon(Icons.settings),
               tooltip: 'Settings',
               onPressed: () async {
-                Navigator.push(context,
-                    MaterialPageRoute<void>(builder: (context) {
-                  return WebsiteInfoPage(websiteId);
-                }));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => WebsiteInfoPage(websiteId),
+                    ));
               },
             ),
             PopupMenuButton<DocumentSelectionPageActions>(

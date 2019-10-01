@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseDefaults {
   static const Map<String, dynamic> defaultWebsite = {
-    'title': 'New Website',
+    'title': 'New website',
     'url': null,
     'maximumPoints': 50.0,
     'username': '',
@@ -15,8 +15,8 @@ class DatabaseDefaults {
   static const Map<String, dynamic> defaultDocument = {
     'websiteId': null,
     'url': null,
-    'title': 'Default Document',
-    'titleOnWebsite': 'Default Document',
+    'title': 'Default document',
+    'titleOnWebsite': 'Default document',
     'statusCodeReason': 'Bad Request',
     'lastModified': '1970-01-01 00:00:00.000Z',
     'orderOnWebsite': 0,
@@ -58,6 +58,7 @@ class DatabaseState with ChangeNotifier {
   List<Map<String, dynamic>> get documents => _documents;
 
   Map<String, dynamic> websiteIdToWebsite(int websiteId) {
+    if (websiteId == null) return DatabaseDefaults.defaultWebsite;
     return websites.singleWhere((website) => website['id'] == websiteId);
   }
 
@@ -68,6 +69,7 @@ class DatabaseState with ChangeNotifier {
   }
 
   Map<String, dynamic> documentIdToDocument(int documentId) {
+    if (documentId == null) return DatabaseDefaults.defaultDocument;
     return documents.singleWhere((document) => document['id'] == documentId);
   }
 
@@ -188,7 +190,12 @@ class DatabaseState with ChangeNotifier {
   }
 
   Future<void> setWebsite(Map<String, dynamic> website) async {
-    await database.update('websites', website, where: 'id = ${website['id']}');
+    if (website['id'] == null) {
+      await database.insert('websites', website);
+    } else {
+      await database.update('websites', website,
+          where: 'id = ${website['id']}');
+    }
     await _loadFromDatabase();
   }
 }

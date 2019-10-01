@@ -1,5 +1,6 @@
 import 'package:exercise_sheets/DatabaseState.dart';
 import 'package:exercise_sheets/DocumentSelectionPage.dart';
+import 'package:exercise_sheets/WebsiteInfoPage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,10 +20,11 @@ class WebsiteSelectionPage extends StatelessWidget {
               print('Opened selection for website ${website['title']} '
                   'with id ${website['id']}');
 
-              Navigator.push(context,
-                  MaterialPageRoute<void>(builder: (context) {
-                return DocumentSelectionPage(website['id']);
-              }));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => DocumentSelectionPage(website['id']),
+                  ));
             },
           ),
         ],
@@ -58,7 +60,13 @@ class WebsiteSelectionPage extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             child: Icon(Icons.add),
             onPressed: () {
-              // TODO: Open WebsiteInfoPage for a new website
+              print('Opened WebsiteInfoPage for a new website');
+
+              Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => WebsiteInfoPage(null),
+                  ));
             },
           ),
         );
