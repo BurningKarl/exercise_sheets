@@ -198,4 +198,9 @@ class DatabaseState with ChangeNotifier {
     }
     await _loadFromDatabase();
   }
+
+  Future<void> deleteWebsite(int websiteId) async {
+    await database.delete('websites', where: 'id = $websiteId');
+    await _loadFromDatabase();
+  }
 }

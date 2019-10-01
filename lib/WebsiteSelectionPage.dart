@@ -7,7 +7,8 @@ import 'package:provider/provider.dart';
 import 'DatabaseState.dart';
 
 class WebsiteSelectionPage extends StatelessWidget {
-  Card buildWebsiteCard(BuildContext context, Map<String, dynamic> website) {
+  Card buildWebsiteCard(BuildContext context, DatabaseState databaseState,
+      Map<String, dynamic> website) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -16,6 +17,18 @@ class WebsiteSelectionPage extends StatelessWidget {
             leading: Icon(Icons.view_list),
             title: Text(website['title']),
             subtitle: Text('Points: ' + website['maximumPoints'].toString()),
+            trailing: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                // TODO: Consider adding the ability to select websites
+                // After one or more websites are selected, a delete button can
+                // be shown
+                // TODO: Consider a swipe gesture to delete a website
+                print('Deleted website ${website['title']} '
+                    'with id ${website['id']}');
+                databaseState.deleteWebsite(website['id']);
+              },
+            ),
             onTap: () {
               print('Opened selection for website ${website['title']} '
                   'with id ${website['id']}');
@@ -42,7 +55,8 @@ class WebsiteSelectionPage extends StatelessWidget {
         child: ListView.builder(
             itemCount: databaseState.websites.length,
             itemBuilder: (context, int index) {
-              return buildWebsiteCard(context, databaseState.websites[index]);
+              return buildWebsiteCard(
+                  context, databaseState, databaseState.websites[index]);
             }),
       );
     }
