@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
@@ -36,7 +35,9 @@ class NetworkOperations {
   static Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url, String username, String password) async {
     // TODO: Support basic authentication
-    Document htmlDocument = parse(utf8.decode(await http.readBytes(url)));
+    // TODO: Check how to get the correct charset
+//    Document htmlDocument = parse(utf8.decode(await http.readBytes(url)));
+    Document htmlDocument = parse(await http.read(url));
 
     List<Element> documentElements =
         htmlDocument.getElementsByTagName('a').where(isPdfHyperlink).toList();

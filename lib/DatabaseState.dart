@@ -29,7 +29,7 @@ class DatabaseDefaults {
   static Map<String, dynamic> completeWebsite(
       Map<String, dynamic> incompleteWebsite,
       {Map<String, dynamic> defaults}) {
-    Map<String, dynamic> website = defaultWebsite;
+    Map<String, dynamic> website = Map.from(defaultWebsite);
     website.addAll(defaults);
     website.addAll(incompleteWebsite);
     return website;
@@ -38,7 +38,7 @@ class DatabaseDefaults {
   static Map<String, dynamic> completeDocument(
       Map<String, dynamic> incompleteDocument,
       {Map<String, dynamic> defaults}) {
-    Map<String, dynamic> document = defaultDocument;
+    Map<String, dynamic> document = Map.from(defaultDocument);
     document.addAll(defaults);
     document.addAll(incompleteDocument);
     return document;
@@ -73,8 +73,10 @@ class DatabaseState with ChangeNotifier {
     return documents.singleWhere((document) => document['id'] == documentId);
   }
 
-  int urlToDocumentId(String url) {
-    return documents.singleWhere((document) => document['url'] == url,
+  int urlToDocumentId(String url, int websiteId) {
+    return documents.singleWhere(
+        (document) =>
+            document['url'] == url && document['websiteId'] == websiteId,
         orElse: () => {'id': null})['id'];
   }
 
@@ -155,7 +157,7 @@ class DatabaseState with ChangeNotifier {
         .then((List<Map<String, dynamic>> documentsOnWebsite) async {
       sqflite.Batch updatesBatch = database.batch();
       for (Map<String, dynamic> document in documentsOnWebsite) {
-        int documentId = urlToDocumentId(document['url']);
+        int documentId = urlToDocumentId(document['url'], websiteId);
         if (documentId == null) {
           document = DatabaseDefaults.completeDocument(document, defaults: {
             'websiteId': websiteId,
@@ -201,6 +203,7 @@ class DatabaseState with ChangeNotifier {
 
   Future<void> deleteWebsite(int websiteId) async {
     await database.delete('websites', where: 'id = $websiteId');
+    await database.delete('documents', where: 'websiteId = $websiteId');
     await _loadFromDatabase();
   }
 }
