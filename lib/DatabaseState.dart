@@ -12,20 +12,20 @@ class DatabaseState with ChangeNotifier {
 
   List<Map<String, dynamic>> get websites => _websites;
 
-  set websites(List<Map<String, dynamic>> value) {
-    _websites = value;
-    notifyListeners();
-  }
+//  set websites(List<Map<String, dynamic>> value) {
+//    _websites = value;
+//    notifyListeners();
+//  }
 
   List<Map<String, dynamic>> get documents => _documents;
 
-  set documents(List<Map<String, dynamic>> value) {
-    _documents = value;
-    notifyListeners();
-  }
+//  set documents(List<Map<String, dynamic>> value) {
+//    _documents = value;
+//    notifyListeners();
+//  }
 
   Map<String, dynamic> websiteIdToWebsite(int websiteId) {
-    return websites.firstWhere((website) => website['id'] == websiteId);
+    return websites.singleWhere((website) => website['id'] == websiteId);
   }
 
   List<Map<String, dynamic>> websiteIdToDocuments(int websiteId) {
@@ -35,11 +35,11 @@ class DatabaseState with ChangeNotifier {
   }
 
   Map<String, dynamic> documentIdToDocument(int documentId) {
-    return documents.firstWhere((document) => document['id'] == documentId);
+    return documents.singleWhere((document) => document['id'] == documentId);
   }
 
   int urlToDocumentId(String url) {
-    return documents.firstWhere((document) => document['url'] == url,
+    return documents.singleWhere((document) => document['url'] == url,
         orElse: () => {'id': null})['id'];
   }
 
