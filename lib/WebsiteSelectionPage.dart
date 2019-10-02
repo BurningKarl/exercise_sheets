@@ -2,13 +2,28 @@ import 'package:exercise_sheets/DatabaseState.dart';
 import 'package:exercise_sheets/DocumentSelectionPage.dart';
 import 'package:exercise_sheets/WebsiteInfoPage.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
 class WebsiteSelectionPage extends StatelessWidget {
-  Card buildWebsiteCard(BuildContext context, DatabaseState databaseState,
-      Map<String, dynamic> website) {
+  NumberFormat pointsFormat = NumberFormat.decimalPattern();
+  NumberFormat averageFormat = NumberFormat.percentPattern();
+
+  Widget buildWebsiteItem(BuildContext context, Map<String, dynamic> website,
+      DatabaseState databaseState) {
+    Map<String, double> stats =
+        databaseState.websiteIdToStatistics(website['id']);
+
+    String statsText;
+    if (stats['maximum'] != 0) {
+      statsText = 'Points: '
+          '${pointsFormat.format(stats['achieved'])}'
+          '/${pointsFormat.format(stats['maximum'])} '
+          ' ~ ${averageFormat.format(stats['achieved']/stats['maximum'])}';
+    }
+
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -16,7 +31,7 @@ class WebsiteSelectionPage extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.view_list),
             title: Text(website['title']),
-            subtitle: Text('Points: ' + website['maximumPoints'].toString()),
+            subtitle: statsText != null ? Text(statsText) : null,
             trailing: IconButton(
               icon: Icon(Icons.delete),
               onPressed: () {
@@ -55,8 +70,8 @@ class WebsiteSelectionPage extends StatelessWidget {
         child: ListView.builder(
             itemCount: databaseState.websites.length,
             itemBuilder: (context, int index) {
-              return buildWebsiteCard(
-                  context, databaseState, databaseState.websites[index]);
+              return buildWebsiteItem(
+                  context, databaseState.websites[index], databaseState);
             }),
       );
     }

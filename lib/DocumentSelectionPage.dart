@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 
@@ -23,6 +24,7 @@ class DocumentSelectionPage extends StatefulWidget {
 class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   final int websiteId;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final NumberFormat pointsFormat = NumberFormat.decimalPattern();
 
   DocumentSelectionPageState(this.websiteId);
 
@@ -31,14 +33,6 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       return 1;
     } else {
       return 0;
-    }
-  }
-
-  String pointsToText(double points) {
-    if (points % 1 == 0) {
-      return points.toStringAsFixed(0);
-    } else {
-      return points.toStringAsFixed(2);
     }
   }
 
@@ -58,7 +52,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     ));
   }
 
-  Card buildDocumentCard(BuildContext context, Map<String, dynamic> document,
+  Widget buildDocumentItem(BuildContext context, Map<String, dynamic> document,
       DatabaseState databaseState) {
     var leadingIconSymbol;
     if (document['statusMessage'] != 'OK') {
@@ -74,9 +68,9 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     }
 
     String pointsText = document['points'] != null
-        ? 'Points: ${pointsToText(document['points'])}'
-            '/${pointsToText(document['maximumPoints'])}'
-        : '';
+        ? 'Points: ${pointsFormat.format(document['points'])}'
+            '/${pointsFormat.format(document['maximumPoints'])}'
+        : null ;
 
     return Card(
       child: Column(
@@ -90,7 +84,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
                   : Colors.blue,
             ),
             title: Text(document['title']),
-            subtitle: Text(pointsText),
+            subtitle: pointsText != null ? Text(pointsText) : null,
             trailing: IconButton(
               icon: Icon(Icons.info),
               onPressed: () {
@@ -149,7 +143,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
         child: ListView.builder(
             itemCount: documents.length,
             itemBuilder: (context, int index) =>
-                buildDocumentCard(context, documents[index], databaseState)),
+                buildDocumentItem(context, documents[index], databaseState)),
       ),
     );
   }

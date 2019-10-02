@@ -32,19 +32,17 @@ class DatabaseDefaults {
   static Map<String, dynamic> completeWebsite(
       Map<String, dynamic> incompleteWebsite,
       {Map<String, dynamic> defaults}) {
-    Map<String, dynamic> website = Map.from(defaultWebsite);
-    website.addAll(defaults);
-    website.addAll(incompleteWebsite);
-    return website;
+    return Map.from(defaultWebsite)
+      ..addAll(defaults)
+      ..addAll(incompleteWebsite);
   }
 
   static Map<String, dynamic> completeDocument(
       Map<String, dynamic> incompleteDocument,
       {Map<String, dynamic> defaults}) {
-    Map<String, dynamic> document = Map.from(defaultDocument);
-    document.addAll(defaults);
-    document.addAll(incompleteDocument);
-    return document;
+    return Map.from(defaultDocument)
+      ..addAll(defaults)
+      ..addAll(incompleteDocument);
   }
 }
 
@@ -71,6 +69,21 @@ class DatabaseState with ChangeNotifier {
         .toList();
   }
 
+  Map<String, double> websiteIdToStatistics(int websiteId) {
+    double achievedTotal = 0;
+    double maximumTotal = 0;
+    websiteIdToDocuments(websiteId)
+        .where((document) => document['points'] != null)
+        .forEach((document) {
+      achievedTotal += document['points'];
+      maximumTotal += document['maximumPoints'];
+    });
+    return {
+      'achieved': achievedTotal,
+      'maximum': maximumTotal,
+    };
+  }
+
   Map<String, dynamic> documentIdToDocument(int documentId) {
     if (documentId == null) return DatabaseDefaults.defaultDocument;
     return documents.singleWhere((document) => document['id'] == documentId);
@@ -94,6 +107,25 @@ class DatabaseState with ChangeNotifier {
     _documents = await database.query('documents',
         orderBy: 'pinned DESC, orderOnWebsite ASC');
     notifyListeners();
+  }
+
+  Future<void> _saveDocumentUpdatesToDatabase(
+      int websiteId, Iterable<Map<String, dynamic>> documentUpdates) async {
+    sqflite.Batch updatesBatch = database.batch();
+
+    for (Map<String, dynamic> document in documentUpdates) {
+      if (document['id'] == null) {
+        updatesBatch.insert('documents', document);
+        print('Inserted');
+      } else {
+        updatesBatch.update('documents', document,
+            where: 'id = ${document['id']}');
+        print('Updated');
+      }
+    }
+
+    await updatesBatch.commit(noResult: true);
+    await _loadFromDatabase();
   }
 
   Future<sqflite.Database> openDatabase(context) {
@@ -155,25 +187,6 @@ class DatabaseState with ChangeNotifier {
       databaseError = true;
       notifyListeners();
     });
-  }
-
-  Future<void> _saveDocumentUpdatesToDatabase(
-      int websiteId, Iterable<Map<String, dynamic>> documentUpdates) async {
-    sqflite.Batch updatesBatch = database.batch();
-
-    for (Map<String, dynamic> document in documentUpdates) {
-      if (document['id'] == null) {
-        updatesBatch.insert('documents', document);
-        print('Inserted');
-      } else {
-        updatesBatch.update('documents', document,
-            where: 'id = ${document['id']}');
-        print('Updated');
-      }
-    }
-
-    await updatesBatch.commit(noResult: true);
-    await _loadFromDatabase();
   }
 
   Future<void> updateDocumentMetadata(int websiteId) async {

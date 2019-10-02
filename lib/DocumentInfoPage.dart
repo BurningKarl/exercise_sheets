@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
@@ -16,15 +17,12 @@ class DocumentInfoPage extends StatefulWidget {
 class DocumentInfoPageState extends State<DocumentInfoPage> {
   final int documentId;
   final _formKey = GlobalKey<FormState>();
+  final NumberFormat pointsFormat = NumberFormat.decimalPattern();
   String titleInput;
   String pointsInput;
   String maximumPointsInput;
 
   DocumentInfoPageState(this.documentId);
-
-  String doubleToString(double value) {
-    return value != null ? value.toString() : "";
-  }
 
   int negate(int value) {
     if (value == 0) {
@@ -96,7 +94,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 Expanded(
                   flex: 10,
                   child: TextFormField(
-                    initialValue: doubleToString(document['points']),
+                    initialValue: pointsFormat.format(document['points']),
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       icon: Icon(Icons.assignment_turned_in),
@@ -131,7 +129,8 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 SizedBox(
                   width: 160,
                   child: TextFormField(
-                    initialValue: doubleToString(document['maximumPoints']),
+                    initialValue:
+                        pointsFormat.format(document['maximumPoints']),
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Maximum points'),
