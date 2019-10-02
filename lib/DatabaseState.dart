@@ -152,7 +152,7 @@ class DatabaseState with ChangeNotifier {
 
   Future<void> updateDocumentMetadata(int websiteId) {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    return NetworkOperations.retrieveDocumentMetadata(
+    return NetworkOperations().retrieveDocumentMetadata(
             website['url'], website['username'], website['password'])
         .then((List<Map<String, dynamic>> documentsOnWebsite) async {
       sqflite.Batch updatesBatch = database.batch();

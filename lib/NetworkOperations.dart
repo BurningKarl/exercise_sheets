@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:html/parser.dart' show parse;
@@ -10,15 +11,22 @@ class NetworkOperations {
         element.attributes['href'].endsWith('.pdf');
   }
 
-  static Future<String> read(String url) async {
-    return (await Dio().get(url)).data.toString();
+  static basicAuthentication(String username, String password) {
+    return 'Basic ' + base64Encode(utf8.encode('$username:$password'));
   }
 
-  static Future<Response> head(String url) {
-    return Dio().head(url, options: Options(validateStatus: (status) => true));
+  // Member functions because they all use the same Dio
+  final Dio dio = Dio();
+
+  Future<String> read(String url) async {
+    return (await dio.get(url)).data.toString();
   }
 
-  static Future<Map<String, dynamic>> elementToDocument(
+  Future<Response> head(String url) {
+    return dio.head(url, options: Options(validateStatus: (status) => true));
+  }
+
+  Future<Map<String, dynamic>> elementToDocument(
       MapEntry<int, Element> entry) async {
     Element element = entry.value;
     Response response = await head(element.attributes['href']);
@@ -40,9 +48,11 @@ class NetworkOperations {
     };
   }
 
-  static Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
+  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url, String username, String password) async {
-    // TODO: Support basic authentication
+    dio.options.headers
+        .addAll({'authorization': basicAuthentication(username, password)});
+
     Document htmlDocument = parse(await read(url));
 
     List<Element> documentElements =
