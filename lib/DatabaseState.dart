@@ -156,40 +156,46 @@ class DatabaseState with ChangeNotifier {
     });
   }
 
+  Future<void> _saveDocumentUpdatesToDatabase(
+      int websiteId, List<Map<String, dynamic>> documentUpdates) async {
+    Map<String, dynamic> website = websiteIdToWebsite(websiteId);
+
+    sqflite.Batch updatesBatch = database.batch();
+
+    for (Map<String, dynamic> document in documentUpdates) {
+      int documentId = urlToDocumentId(document['url'], websiteId);
+      if (documentId == null) {
+        document = DatabaseDefaults.completeDocument(document, defaults: {
+          'websiteId': websiteId,
+          'title': document['titleOnWebsite'],
+          'maximumPoints': website['maximumPoints'],
+        });
+        updatesBatch.insert('documents', document);
+        print('Inserted');
+      } else {
+        updatesBatch.update('documents', document, where: 'id = $documentId');
+        print('Updated');
+      }
+    }
+
+    String urlList =
+        documentUpdates.map((document) => '"${document['url']}"').join(', ');
+
+    updatesBatch.rawDelete('DELETE FROM documents '
+        'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
+
+    await updatesBatch.commit(noResult: true);
+    await _loadFromDatabase();
+  }
+
   Future<void> updateDocumentMetadata(int websiteId) {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    return NetworkOperations()
-        .retrieveDocumentMetadata(
-            website['url'], website['username'], website['password'])
-        .then((List<Map<String, dynamic>> documentsOnWebsite) async {
-      sqflite.Batch updatesBatch = database.batch();
-      for (Map<String, dynamic> document in documentsOnWebsite) {
-        int documentId = urlToDocumentId(document['url'], websiteId);
-        if (documentId == null) {
-          document = DatabaseDefaults.completeDocument(document, defaults: {
-            'websiteId': websiteId,
-            'title': document['titleOnWebsite'],
-            'maximumPoints': website['maximumPoints'],
-          });
-          updatesBatch.insert('documents', document);
-          print('Inserted');
-        } else {
-          updatesBatch.update('documents', document, where: 'id = $documentId');
-          print('Updated');
-        }
-      }
+    NetworkOperations operations = NetworkOperations.withAuthentication(
+        website['username'], website['password']);
 
-      String urlList = documentsOnWebsite
-          .map((document) => '"${document['url']}"')
-          .join(', ');
-
-      updatesBatch.rawDelete('DELETE FROM documents '
-          'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
-
-      await updatesBatch.commit(noResult: true);
-
-      await _loadFromDatabase();
-    });
+    return operations.retrieveDocumentMetadata(website['url']).then(
+        (documentUpdates) =>
+            _saveDocumentUpdatesToDatabase(websiteId, documentUpdates));
   }
 
   Future<void> setDocument(Map<String, dynamic> document) async {

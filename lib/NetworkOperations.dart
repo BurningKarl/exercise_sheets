@@ -16,7 +16,15 @@ class NetworkOperations {
   }
 
   // Member functions because they all use the same Dio
-  final Dio dio = Dio();
+  final Dio dio;
+
+  NetworkOperations([Dio dio]) : dio = dio ?? Dio();
+
+  static withAuthentication(String username, String password) {
+    return NetworkOperations(Dio(BaseOptions(
+      headers: {'authorization': basicAuthentication(username, password)},
+    )));
+  }
 
   Future<String> read(String url) async {
     return (await dio.get(url)).data.toString();
@@ -49,10 +57,7 @@ class NetworkOperations {
   }
 
   Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
-      String url, String username, String password) async {
-    dio.options.headers
-        .addAll({'authorization': basicAuthentication(username, password)});
-
+      String url) async {
     Document htmlDocument = parse(await read(url));
 
     List<Element> documentElements =
