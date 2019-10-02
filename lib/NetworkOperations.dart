@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,23 +10,31 @@ class NetworkOperations {
         element.attributes['href'].endsWith('.pdf');
   }
 
+  static Future<String> read(String url) async {
+    return (await Dio().get(url)).data.toString();
+  }
+
+  static Future<Response> head(String url) {
+    return Dio().head(url, options: Options(validateStatus: (status) => true));
+  }
+
   static Future<Map<String, dynamic>> elementToDocument(
       MapEntry<int, Element> entry) async {
     Element element = entry.value;
-    http.Response response = await http.head(element.attributes['href']);
+    Response response = await head(element.attributes['href']);
 
-    print(response.reasonPhrase);
-    if (response.reasonPhrase == 'OK') {
-      assert(response.headers['content-type'] == 'application/pdf');
-      assert(response.headers.containsKey('last-modified'));
+    print(response.statusMessage);
+    if (response.statusMessage == 'OK') {
+      assert(response.headers['content-type'].single == 'application/pdf');
+      assert(response.headers['last-modified'].length == 1);
     }
 
     return {
       'url': element.attributes['href'],
       'titleOnWebsite': element.innerHtml.replaceAll('\n', '').trim(),
-      'statusCodeReason': response.reasonPhrase,
-      'lastModified': response.headers.containsKey('last-modified')
-          ? HttpDate.parse(response.headers['last-modified']).toString()
+      'statusCodeReason': response.statusMessage,
+      'lastModified': response.headers['last-modified'] != null
+          ? HttpDate.parse(response.headers['last-modified'].single).toString()
           : null,
       'orderOnWebsite': entry.key,
     };
@@ -35,9 +43,7 @@ class NetworkOperations {
   static Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url, String username, String password) async {
     // TODO: Support basic authentication
-    // TODO: Check how to get the correct charset
-//    Document htmlDocument = parse(utf8.decode(await http.readBytes(url)));
-    Document htmlDocument = parse(await http.read(url));
+    Document htmlDocument = parse(await read(url));
 
     List<Element> documentElements =
         htmlDocument.getElementsByTagName('a').where(isPdfHyperlink).toList();

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart';
+import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
@@ -112,7 +112,7 @@ class DocumentSelectionPage extends StatelessWidget {
           Scaffold.of(context).showSnackBar(SnackBar(
             content: Text('A network error occured: \n$error'),
           ));
-        }, test: (error) => error is ClientException);
+        }, test: (error) => error is DioError);
       },
       child: Scrollbar(
         child: ListView.builder(
