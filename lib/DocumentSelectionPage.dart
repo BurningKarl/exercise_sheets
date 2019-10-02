@@ -34,7 +34,7 @@ class DocumentSelectionPage extends StatelessWidget {
 
   Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
     var leadingIconSymbol;
-    if (document['statusCodeReason'] != 'OK') {
+    if (document['statusMessage'] != 'OK') {
       leadingIconSymbol = Icons.cancel;
     } else if (document['archived'] != 0) {
       leadingIconSymbol = Icons.archive;
@@ -73,12 +73,15 @@ class DocumentSelectionPage extends StatelessWidget {
             ),
             onTap: () async {
               // TODO: Open the local PDF document if possible
-              if (document['statusCodeReason'] == 'OK') {
+              if (document['file'] != null) {
+                NetworkOperations.launchUrl(
+                    Uri.file(document['file']).toString());
+              } else if (document['statusMessage'] == 'OK') {
                 NetworkOperations.launchUrl(document['url']);
               } else {
                 Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text('This document is unreachable: ' +
-                      document['statusCodeReason']),
+                      document['statusMessage']),
                 ));
               }
             },

@@ -17,8 +17,10 @@ class DatabaseDefaults {
     'url': null,
     'title': 'Default document',
     'titleOnWebsite': 'Default document',
-    'statusCodeReason': 'Bad Request',
+    'statusMessage': 'Bad Request',
     'lastModified': '1970-01-01 00:00:00.000Z',
+    'file': null,
+    'filelastModified': null,
     'orderOnWebsite': 0,
     'archived': 0,
     'pinned': 0,
@@ -118,8 +120,10 @@ class DatabaseState with ChangeNotifier {
             'url TEXT, '
             'title TEXT, '
             'titleOnWebsite TEXT, '
-            'statusCodeReason TEXT, '
+            'statusMessage TEXT, '
             'lastModified TEXT, '
+            'file TEXT, '
+            'fileLastModified TEXT, '
             'orderOnWebsite INT, '
             'archived BOOLEAN, '
             'pinned BOOLEAN, '
@@ -131,8 +135,10 @@ class DatabaseState with ChangeNotifier {
           'url': 'http://www.math.uni-bonn.de/people/ursula/uebungss1912.pdf',
           'title': 'Übungsblatt 12',
           'titleOnWebsite': 'Übungsblatt 12',
-          'statusCodeReason': 'OK',
+          'statusMessage': 'OK',
           'lastModified': '2019-04-02 15:19:15.000',
+          'file': null,
+          'fileLastModified': null,
           'orderOnWebsite': 1,
           'archived': 0,
           'pinned': 0,
@@ -152,7 +158,8 @@ class DatabaseState with ChangeNotifier {
 
   Future<void> updateDocumentMetadata(int websiteId) {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    return NetworkOperations().retrieveDocumentMetadata(
+    return NetworkOperations()
+        .retrieveDocumentMetadata(
             website['url'], website['username'], website['password'])
         .then((List<Map<String, dynamic>> documentsOnWebsite) async {
       sqflite.Batch updatesBatch = database.batch();

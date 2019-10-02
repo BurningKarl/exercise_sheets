@@ -40,7 +40,7 @@ class NetworkOperations {
     return {
       'url': element.attributes['href'],
       'titleOnWebsite': element.innerHtml.replaceAll('\n', '').trim(),
-      'statusCodeReason': response.statusMessage,
+      'statusMessage': response.statusMessage,
       'lastModified': response.headers['last-modified'] != null
           ? HttpDate.parse(response.headers['last-modified'].single).toString()
           : null,
