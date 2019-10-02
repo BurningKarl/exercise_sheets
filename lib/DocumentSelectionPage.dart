@@ -133,18 +133,24 @@ class DocumentSelectionPage extends StatelessWidget {
     return Consumer<DatabaseState>(builder: (context, databaseState, _) {
       Map<String, dynamic> website =
           databaseState.websiteIdToWebsite(websiteId);
+
+      bool isPdfUpdateNecessary = databaseState
+          .websiteIdToDocuments(websiteId)
+          .any(databaseState.isPdfUpdateNecessary);
       return Scaffold(
         appBar: AppBar(
           title: Text(website['title']),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.cloud_download),
+              icon: Icon(isPdfUpdateNecessary
+                  ? Icons.cloud_download
+                  : Icons.cloud_done),
               onPressed: () async {
                 //TODO: Download all PDF files of the documents
                 // The icon should change to Icons.cloud_done if none of
                 // the lastModified is newer than the local files
                 print('Download started');
-                databaseState.updateDocumentPdfs(websiteId).then((_) async {
+                databaseState.updateDocumentPdfs(websiteId).then((_) {
                   print('Download finished');
                 });
                 // TODO: Add error handling

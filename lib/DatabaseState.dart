@@ -208,22 +208,23 @@ class DatabaseState with ChangeNotifier {
     await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
   }
 
+  bool isPdfUpdateNecessary(Map<String, dynamic> document) {
+    return document['statusMessage'] == 'OK' &&
+        (document['file'] == null ||
+            DateTime.parse(document['lastModified'])
+                .isAfter(DateTime.parse(document['fileLastModified'])));
+  }
+
   Future<void> updateDocumentPdfs(int websiteId) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    List<Map<String, dynamic>> documents = websiteIdToDocuments(websiteId);
     NetworkOperations operations = NetworkOperations.withAuthentication(
         website['username'], website['password']);
 
-    bool updateNecessary(Map<String, dynamic> document) {
-      return document['statusMessage'] == 'OK' &&
-          (document['file'] == null ||
-              DateTime.parse(document['lastModified'])
-                  .isAfter(DateTime.parse(document['fileLastModified'])));
-    }
-
     DateTime now = DateTime.now().toUtc();
     Map<int, File> files = Map.fromEntries(await Future.wait(
-        documents.where(updateNecessary).map(operations.downloadDocumentPdf)));
+        websiteIdToDocuments(websiteId)
+            .where(isPdfUpdateNecessary)
+            .map(operations.downloadDocumentPdf)));
 
     Iterable<Map<String, dynamic>> documentUpdates = files.entries.map(
       (entry) => {
