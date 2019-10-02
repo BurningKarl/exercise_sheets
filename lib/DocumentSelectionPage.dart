@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
@@ -12,10 +11,20 @@ import 'DocumentInfoPage.dart';
 
 enum DocumentSelectionPageActions { show_hide_archived }
 
-class DocumentSelectionPage extends StatelessWidget {
+class DocumentSelectionPage extends StatefulWidget {
   final int websiteId;
 
   const DocumentSelectionPage(this.websiteId);
+
+  @override
+  State<StatefulWidget> createState() => DocumentSelectionPageState(websiteId);
+}
+
+class DocumentSelectionPageState extends State<DocumentSelectionPage> {
+  final int websiteId;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  DocumentSelectionPageState(this.websiteId);
 
   int negate(int value) {
     if (value == 0) {
@@ -33,7 +42,24 @@ class DocumentSelectionPage extends StatelessWidget {
     }
   }
 
-  Card buildDocumentCard(BuildContext context, Map<String, dynamic> document) {
+  void showSnackBar(SnackBar snackBar) {
+    _scaffoldKey.currentState.showSnackBar(snackBar);
+  }
+
+  void handleNetworkError(dynamic error, BuildContext context) {
+    String errorText;
+    if (error is DioError && error.type == DioErrorType.DEFAULT) {
+      errorText = 'No network connection available';
+    } else {
+      errorText = 'A network error occured: \n$error';
+    }
+    showSnackBar(SnackBar(
+      content: Text(errorText),
+    ));
+  }
+
+  Card buildDocumentCard(BuildContext context, Map<String, dynamic> document,
+      DatabaseState databaseState) {
     var leadingIconSymbol;
     if (document['statusMessage'] != 'OK') {
       leadingIconSymbol = Icons.cancel;
@@ -57,7 +83,12 @@ class DocumentSelectionPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            leading: Icon(leadingIconSymbol),
+            leading: Icon(
+              leadingIconSymbol,
+              color: databaseState.isPdfUpdateNecessary(document)
+                  ? null
+                  : Colors.blue,
+            ),
             title: Text(document['title']),
             subtitle: Text(pointsText),
             trailing: IconButton(
@@ -73,14 +104,17 @@ class DocumentSelectionPage extends StatelessWidget {
               },
             ),
             onTap: () async {
-              // TODO: Open the local PDF document if possible
+              print('Tried to open document ${document['title']} '
+                  'with id ${document['id']}');
               if (document['file'] != null) {
-                print(document['file']);
+                print('Opened locally');
                 await OpenFile.open(document['file']);
               } else if (document['statusMessage'] == 'OK') {
+                print('Opened by url');
                 NetworkOperations.launchUrl(document['url']);
               } else {
-                Scaffold.of(context).showSnackBar(SnackBar(
+                print('Not opened: ${document['statusMessage']}');
+                showSnackBar(SnackBar(
                   content: Text('This document is unreachable: ' +
                       document['statusMessage']),
                 ));
@@ -107,23 +141,15 @@ class DocumentSelectionPage extends StatelessWidget {
     }
     return RefreshIndicator(
       onRefresh: () {
-        return databaseState.updateDocumentMetadata(websiteId).catchError(
-            (error) {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('A network error occured: \n$error'),
-          ));
-        }, test: (error) => error is IOException).catchError((error) {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('A network error occured: \n$error'),
-          ));
-        }, test: (error) => error is DioError);
+        return databaseState
+            .updateDocumentMetadata(websiteId)
+            .catchError((error) => handleNetworkError(error, context));
       },
       child: Scrollbar(
         child: ListView.builder(
             itemCount: documents.length,
-            itemBuilder: (context, int index) {
-              return buildDocumentCard(context, documents[index]);
-            }),
+            itemBuilder: (context, int index) =>
+                buildDocumentCard(context, documents[index], databaseState)),
       ),
     );
   }
@@ -138,6 +164,7 @@ class DocumentSelectionPage extends StatelessWidget {
           .websiteIdToDocuments(websiteId)
           .any(databaseState.isPdfUpdateNecessary);
       return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           title: Text(website['title']),
           actions: <Widget>[
@@ -145,21 +172,21 @@ class DocumentSelectionPage extends StatelessWidget {
               icon: Icon(isPdfUpdateNecessary
                   ? Icons.cloud_download
                   : Icons.cloud_done),
+              tooltip: 'Download PDFs',
               onPressed: () async {
-                //TODO: Download all PDF files of the documents
-                // The icon should change to Icons.cloud_done if none of
-                // the lastModified is newer than the local files
                 print('Download started');
                 databaseState.updateDocumentPdfs(websiteId).then((_) {
                   print('Download finished');
-                });
-                // TODO: Add error handling
+                }).catchError((error) => handleNetworkError(error, context));
               },
             ),
             IconButton(
               icon: Icon(Icons.settings),
               tooltip: 'Settings',
-              onPressed: () async {
+              onPressed: () {
+                print('Opened settings for website ${website['title']} '
+                    'with id ${website['id']}');
+
                 Navigator.push(
                     context,
                     MaterialPageRoute<void>(
@@ -187,10 +214,7 @@ class DocumentSelectionPage extends StatelessWidget {
             )
           ],
         ),
-        body: Builder(
-          // This is necessary to use Scaffold.of(innerContext)
-          builder: (innerContext) => buildContent(innerContext, databaseState),
-        ),
+        body: buildContent(context, databaseState),
       );
     });
   }
