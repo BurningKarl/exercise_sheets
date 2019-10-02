@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NetworkOperations {
@@ -13,6 +14,14 @@ class NetworkOperations {
 
   static basicAuthentication(String username, String password) {
     return 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+  }
+
+  static Future<void> launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   // Member functions because they all use the same Dio
@@ -32,6 +41,10 @@ class NetworkOperations {
 
   Future<Response> head(String url) {
     return dio.head(url, options: Options(validateStatus: (status) => true));
+  }
+
+  Future<Response> download(String url, String savePath) {
+    return dio.download(url, savePath);
   }
 
   Future<Map<String, dynamic>> elementToDocument(
@@ -67,11 +80,14 @@ class NetworkOperations {
         documentElements.asMap().entries.map(elementToDocument));
   }
 
-  static Future<void> launchUrl(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
+  Future<MapEntry<int, File>> downloadDocumentPdf(
+      Map<String, dynamic> document) async {
+    String fileName = Uri.parse(document['url']).pathSegments.last;
+    Directory baseDirectory = await getExternalStorageDirectory();
+    String path = baseDirectory.path + '/${document['websiteId']}/$fileName';
+    print(path);
+    await File(path).create(recursive: true);
+    await download(document['url'], path);
+    return MapEntry(document['id'], File(path));
   }
 }

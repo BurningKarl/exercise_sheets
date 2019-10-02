@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
+import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
@@ -74,8 +75,8 @@ class DocumentSelectionPage extends StatelessWidget {
             onTap: () async {
               // TODO: Open the local PDF document if possible
               if (document['file'] != null) {
-                NetworkOperations.launchUrl(
-                    Uri.file(document['file']).toString());
+                print(document['file']);
+                await OpenFile.open(document['file']);
               } else if (document['statusMessage'] == 'OK') {
                 NetworkOperations.launchUrl(document['url']);
               } else {
@@ -142,7 +143,11 @@ class DocumentSelectionPage extends StatelessWidget {
                 //TODO: Download all PDF files of the documents
                 // The icon should change to Icons.cloud_done if none of
                 // the lastModified is newer than the local files
-                // Add columns: file and fileLastModified
+                print('Download started');
+                databaseState.updateDocumentPdfs(websiteId).then((_) async {
+                  print('Download finished');
+                });
+                // TODO: Add error handling
               },
             ),
             IconButton(

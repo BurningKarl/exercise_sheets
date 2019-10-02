@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -157,45 +158,82 @@ class DatabaseState with ChangeNotifier {
   }
 
   Future<void> _saveDocumentUpdatesToDatabase(
-      int websiteId, List<Map<String, dynamic>> documentUpdates) async {
-    Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-
+      int websiteId, Iterable<Map<String, dynamic>> documentUpdates) async {
     sqflite.Batch updatesBatch = database.batch();
 
     for (Map<String, dynamic> document in documentUpdates) {
-      int documentId = urlToDocumentId(document['url'], websiteId);
-      if (documentId == null) {
-        document = DatabaseDefaults.completeDocument(document, defaults: {
-          'websiteId': websiteId,
-          'title': document['titleOnWebsite'],
-          'maximumPoints': website['maximumPoints'],
-        });
+      if (document['id'] == null) {
         updatesBatch.insert('documents', document);
         print('Inserted');
       } else {
-        updatesBatch.update('documents', document, where: 'id = $documentId');
+        updatesBatch.update('documents', document,
+            where: 'id = ${document['id']}');
         print('Updated');
       }
     }
-
-    String urlList =
-        documentUpdates.map((document) => '"${document['url']}"').join(', ');
-
-    updatesBatch.rawDelete('DELETE FROM documents '
-        'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
 
     await updatesBatch.commit(noResult: true);
     await _loadFromDatabase();
   }
 
-  Future<void> updateDocumentMetadata(int websiteId) {
+  Future<void> updateDocumentMetadata(int websiteId) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
     NetworkOperations operations = NetworkOperations.withAuthentication(
         website['username'], website['password']);
 
-    return operations.retrieveDocumentMetadata(website['url']).then(
-        (documentUpdates) =>
-            _saveDocumentUpdatesToDatabase(websiteId, documentUpdates));
+    Iterable<Map<String, dynamic>> documentUpdates =
+        await operations.retrieveDocumentMetadata(website['url']);
+
+    String urlList =
+        documentUpdates.map((document) => '"${document['url']}"').join(', ');
+
+    documentUpdates = documentUpdates.map((Map<String, dynamic> document) {
+      int documentId = urlToDocumentId(document['url'], websiteId);
+      if (documentId == null) {
+        // New document
+        return DatabaseDefaults.completeDocument(document, defaults: {
+          'websiteId': websiteId,
+          'title': document['titleOnWebsite'],
+          'maximumPoints': website['maximumPoints'],
+        });
+      } else {
+        document['id'] = documentId;
+        return document;
+      }
+    });
+
+    await database.rawDelete('DELETE FROM documents '
+        'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
+
+    await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
+  }
+
+  Future<void> updateDocumentPdfs(int websiteId) async {
+    Map<String, dynamic> website = websiteIdToWebsite(websiteId);
+    List<Map<String, dynamic>> documents = websiteIdToDocuments(websiteId);
+    NetworkOperations operations = NetworkOperations.withAuthentication(
+        website['username'], website['password']);
+
+    bool updateNecessary(Map<String, dynamic> document) {
+      return document['statusMessage'] == 'OK' &&
+          (document['file'] == null ||
+              DateTime.parse(document['lastModified'])
+                  .isAfter(DateTime.parse(document['fileLastModified'])));
+    }
+
+    DateTime now = DateTime.now().toUtc();
+    Map<int, File> files = Map.fromEntries(await Future.wait(
+        documents.where(updateNecessary).map(operations.downloadDocumentPdf)));
+
+    Iterable<Map<String, dynamic>> documentUpdates = files.entries.map(
+      (entry) => {
+        'id': entry.key,
+        'file': entry.value.path,
+        'fileLastModified': now.toString(),
+      },
+    );
+
+    await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
   }
 
   Future<void> setDocument(Map<String, dynamic> document) async {
