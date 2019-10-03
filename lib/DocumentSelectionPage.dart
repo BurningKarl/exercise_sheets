@@ -28,6 +28,10 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
 
   DocumentSelectionPageState(this.websiteId);
 
+  String pointsToString(double value) {
+    return value != null ? pointsFormat.format(value) : null;
+  }
+
   int negate(int value) {
     if (value == 0) {
       return 1;
@@ -53,7 +57,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   }
 
   Widget buildDocumentItem(BuildContext context, Map<String, dynamic> document,
-      DatabaseState databaseState) {
+      DatabaseState databaseState, bool showArchived) {
     var leadingIconSymbol;
     if (document['statusMessage'] != 'OK') {
       leadingIconSymbol = Icons.cancel;
@@ -68,11 +72,11 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     }
 
     String pointsText = document['points'] != null
-        ? 'Points: ${pointsFormat.format(document['points'])}'
-            '/${pointsFormat.format(document['maximumPoints'])}'
-        : null ;
+        ? 'Points: ${pointsToString(document['points'])}'
+            '/${pointsToString(document['maximumPoints'])}'
+        : null;
 
-    return Card(
+    Widget item = Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -81,7 +85,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
               leadingIconSymbol,
               color: databaseState.isPdfUpdateNecessary(document)
                   ? null
-                  : Colors.blue,
+                  : Colors.green,
             ),
             title: Text(document['title']),
             subtitle: pointsText != null ? Text(pointsText) : null,
@@ -118,6 +122,36 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
         ],
       ),
     );
+
+    if (showArchived) {
+      return item;
+    } else {
+      return Dismissible(
+        key: Key(document['id'].toString()),
+        direction: DismissDirection.horizontal,
+        onDismissed: (DismissDirection direction) async {
+          // Archive this document
+          Map<String, dynamic> alteredDocument = Map.from(document);
+          alteredDocument['archived'] = negate(document['archived']);
+          await databaseState.setDocument(alteredDocument);
+          print('Archived website ${document['title']} '
+              'with id ${document['id']}');
+        },
+        background: Container(
+          color: Colors.blue,
+          child: Icon(Icons.archive),
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        ),
+        secondaryBackground: Container(
+          color: Colors.blue,
+          child: Icon(Icons.archive),
+          alignment: Alignment.centerRight,
+          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        ),
+        child: item,
+      );
+    }
   }
 
   Widget buildContent(BuildContext context, DatabaseState databaseState) {
@@ -142,8 +176,8 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       child: Scrollbar(
         child: ListView.builder(
             itemCount: documents.length,
-            itemBuilder: (context, int index) =>
-                buildDocumentItem(context, documents[index], databaseState)),
+            itemBuilder: (context, int index) => buildDocumentItem(context,
+                documents[index], databaseState, website['showArchived'] != 0)),
       ),
     );
   }

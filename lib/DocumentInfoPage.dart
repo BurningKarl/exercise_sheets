@@ -24,6 +24,10 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
 
   DocumentInfoPageState(this.documentId);
 
+  String pointsToString(double value) {
+    return value != null ? pointsFormat.format(value) : null;
+  }
+
   int negate(int value) {
     if (value == 0) {
       return 1;
@@ -36,7 +40,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
     Map<String, dynamic> document = database.documentIdToDocument(documentId);
     String lastModified = document['lastModified'] != null
         ? DateTime.parse(document['lastModified']).toLocal().toString()
-        : '';
+        : 'Unknown';
 
     return Form(
       key: _formKey,
@@ -94,7 +98,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 Expanded(
                   flex: 10,
                   child: TextFormField(
-                    initialValue: pointsFormat.format(document['points']),
+                    initialValue: pointsToString(document['points']),
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       icon: Icon(Icons.assignment_turned_in),
@@ -130,7 +134,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                   width: 160,
                   child: TextFormField(
                     initialValue:
-                        pointsFormat.format(document['maximumPoints']),
+                        pointsToString(document['maximumPoints']),
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Maximum points'),
@@ -171,20 +175,20 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
               icon: Icon(
                   document['archived'] == 0 ? Icons.archive : Icons.unarchive),
               tooltip: document['archived'] == 0 ? 'Archive' : 'Unarchive',
-              onPressed: () {
+              onPressed: () async {
                 Map<String, dynamic> alteredDocument = Map.from(document);
                 alteredDocument['archived'] = negate(document['archived']);
-                databaseState.setDocument(alteredDocument);
+                await databaseState.setDocument(alteredDocument);
               },
             ),
             IconButton(
               icon: Icon(
                   document['pinned'] == 0 ? Icons.star_border : Icons.star),
               tooltip: document['pinned'] == 0 ? 'Pin' : 'Unpin',
-              onPressed: () {
+              onPressed: () async {
                 Map<String, dynamic> alteredDocument = Map.from(document);
                 alteredDocument['pinned'] = negate(document['pinned']);
-                databaseState.setDocument(alteredDocument);
+                await databaseState.setDocument(alteredDocument);
               },
             ),
           ],
@@ -193,7 +197,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.check),
           tooltip: 'Submit',
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState.validate()) {
               _formKey.currentState.save();
               Map<String, dynamic> alteredDocument = Map.from(document);
@@ -202,7 +206,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 'points': double.tryParse(pointsInput),
                 'maximumPoints': double.tryParse(maximumPointsInput),
               });
-              databaseState.setDocument(alteredDocument);
+              await databaseState.setDocument(alteredDocument);
               Navigator.pop(context);
             }
           },
