@@ -8,7 +8,6 @@ import 'WebsiteSelectionPage.dart';
 void main() => runApp(MyApp());
 
 // TODO: Use intl for all UI strings
-// TODO: Add export feature
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

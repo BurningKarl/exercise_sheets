@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseDefaults {
@@ -270,5 +272,52 @@ class DatabaseState with ChangeNotifier {
     await database.delete('websites', where: 'id = $websiteId');
     await database.delete('documents', where: 'websiteId = $websiteId');
     await _loadFromDatabase();
+  }
+
+  String toJson() {
+    return jsonEncode({
+      'websites':websites,
+      'documents': documents,
+    });
+  }
+
+  Future<void> exportToFile(File file) async {
+    await file.create(recursive: true);
+    await file.writeAsString(toJson());
+  }
+
+  Future<File> export() async {
+    Directory baseDirectory = await getExternalStorageDirectory();
+    await Directory(baseDirectory.path + '/import').create(recursive: true);
+    var file = File(baseDirectory.path + '/export/exercise_sheets.json');
+    await exportToFile(file);
+    return file;
+  }
+
+  Future<void> importFromFile(File file) async {
+    Map<String, dynamic> content = jsonDecode(await file.readAsString());
+
+    sqflite.Batch batch = database.batch();
+    batch.delete('websites');
+    batch.delete('documents');
+
+    for (Map<String, dynamic> website in content['websites']) {
+      batch.insert('websites', website);
+    }
+
+    for (Map<String, dynamic> document in content['documents']) {
+      batch.insert('documents', document);
+    }
+
+    await batch.commit(noResult: true);
+
+    await _loadFromDatabase();
+  }
+
+  Future<File> import() async {
+    Directory baseDirectory = await getExternalStorageDirectory();
+    var file = File(baseDirectory.path + '/import/exercise_sheets.json');
+    await importFromFile(file);
+    return file;
   }
 }
