@@ -275,9 +275,13 @@ class DatabaseState with ChangeNotifier {
     await _loadFromDatabase();
   }
 
-  Future<void> deleteWebsite(int websiteId) async {
-    await database.delete('websites', where: 'id = $websiteId');
-    await database.delete('documents', where: 'websiteId = $websiteId');
+  Future<void> deleteWebsites(Iterable<int> websiteIds) async {
+    sqflite.Batch batch = database.batch();
+    for (int websiteId in websiteIds) {
+      batch.delete('websites', where: 'id = $websiteId');
+      batch.delete('documents', where: 'websiteId = $websiteId');
+    }
+    await batch.commit(noResult: true);
     await _loadFromDatabase();
   }
 

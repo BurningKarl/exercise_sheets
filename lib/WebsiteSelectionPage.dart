@@ -18,6 +18,7 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
   final NumberFormat averageFormat = NumberFormat.percentPattern();
 
   final List<int> selectedItems = List();
+  DatabaseState databaseState;
 
   bool isSelected(int index) => selectedItems.contains(index);
 
@@ -35,8 +36,61 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
     });
   }
 
-  Widget buildWebsiteItem(
-      BuildContext context, int index, DatabaseState databaseState) {
+  Future<bool> confirmDeletion(List<int> toBeDeleted) {
+    String title, content;
+    if (toBeDeleted.length == 1) {
+      var website = databaseState.websites[toBeDeleted.single];
+      title = 'Delete "${website['title']}"?';
+      content = 'This will delete the website and all corresponding documents. '
+          'It cannot be undone!';
+    } else {
+      var escapedWebsiteTitles = toBeDeleted
+          .map((index) => databaseState.websites[index]['title'])
+          .map((title) => '"$title"');
+      var websitesString = escapedWebsiteTitles.join(', ');
+      title = 'Delete ${toBeDeleted.length} websites?';
+      content = 'This will delete the websites $websitesString and all their '
+          'documents. It cannot be undone!';
+    }
+    return showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('CANCEL'),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              FlatButton(
+                child: Text('YES'),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<void> deleteWebsites(List<int> toBeDeleted) async {
+    var websites = toBeDeleted
+        .map((index) => Map.from(databaseState.websites[index]))
+        .toList();
+    var websiteIds = websites.map((website) => website['id'] as int);
+    await databaseState.deleteWebsites(websiteIds);
+
+    for (var website in websites) {
+      print('Deleted website ${website['title']} '
+          'with id ${website['id']}');
+    }
+  }
+
+  Widget buildWebsiteItem(BuildContext context, int index) {
     Map<String, dynamic> website = databaseState.websites[index];
     Map<String, double> stats =
         databaseState.websiteIdToStatistics(website['id']);
@@ -52,39 +106,8 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
     return Dismissible(
       key: Key(website['id'].toString()),
       direction: DismissDirection.horizontal,
-      confirmDismiss: (DismissDirection direction) {
-        return showDialog<bool>(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Delete "${website['title']}"?'),
-                content:
-                    Text('This will delete the website and all corresponding '
-                        'documents. It cannot be undone!'),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text('CANCEL'),
-                    onPressed: () {
-                      Navigator.of(context).pop(false);
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('YES'),
-                    onPressed: () {
-                      Navigator.of(context).pop(true);
-                    },
-                  ),
-                ],
-              );
-            });
-      },
-      onDismissed: (DismissDirection direction) async {
-        // Delete this website
-        await databaseState.deleteWebsite(website['id']);
-        print('Deleted website ${website['title']} '
-            'with id ${website['id']}');
-      },
+      confirmDismiss: (DismissDirection direction) => confirmDeletion([index]),
+      onDismissed: (DismissDirection direction) => deleteWebsites([index]),
       background: Container(
         color: Colors.red,
         child: Icon(Icons.delete),
@@ -132,7 +155,7 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
     );
   }
 
-  Widget buildContent(BuildContext context, DatabaseState databaseState) {
+  Widget buildContent(BuildContext context) {
     if (databaseState.databaseError) {
       return Center(
         child: Text('The database could not be opened'),
@@ -140,10 +163,9 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
     } else {
       return Scrollbar(
         child: ListView.builder(
-            itemCount: databaseState.websites.length,
-            itemBuilder: (context, int index) {
-              return buildWebsiteItem(context, index, databaseState);
-            }),
+          itemCount: databaseState.websites.length,
+          itemBuilder: (context, int index) => buildWebsiteItem(context, index),
+        ),
       );
     }
   }
@@ -151,7 +173,9 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseState>(
-      builder: (context, databaseState, _) {
+      builder: (context, newDatabaseState, _) {
+        databaseState = newDatabaseState;
+
         AppBar appBar;
         if (isInSelectionMode()) {
           appBar = AppBar(
@@ -167,7 +191,13 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
             actions: <Widget>[
               IconButton(
                 icon: Icon(Icons.delete),
-                onPressed: () {},
+                onPressed: () async {
+                  if (await confirmDeletion(selectedItems)) {
+                    var selectedItemsCopy = List<int>.from(selectedItems);
+                    selectedItems.clear();
+                    await deleteWebsites(selectedItemsCopy);
+                  }
+                },
               )
             ],
           );
@@ -186,7 +216,7 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
 
         return Scaffold(
           appBar: appBar,
-          body: buildContent(context, databaseState),
+          body: buildContent(context),
           floatingActionButton: FloatingActionButton(
             child: Icon(Icons.add),
             onPressed: () {
