@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:exercise_sheets/DatabaseState.dart';
 import 'package:exercise_sheets/DocumentSelectionPage.dart';
 import 'package:exercise_sheets/WebsiteInfoPage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
@@ -17,7 +19,11 @@ class WebsiteSelectionPage extends StatelessWidget {
 
   Future<void> handleExport(
       BuildContext context, DatabaseState databaseState) async {
-    databaseState.export().then((File file) {
+    Directory baseDirectory = await getExternalStorageDirectory();
+    var file = File(baseDirectory.path + '/exercise_sheets.json');
+    print(file.path);
+
+    databaseState.exportToFile(file).then((_) {
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -54,7 +60,10 @@ class WebsiteSelectionPage extends StatelessWidget {
 
   Future<void> handleImport(
       BuildContext context, DatabaseState databaseState) async {
-    databaseState.import().then((File file) {
+    File file = File(await FilePicker.getFilePath(
+        type: FileType.ANY, fileExtension: 'json'));
+
+    databaseState.importFromFile(file).then((_) {
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -71,22 +80,13 @@ class WebsiteSelectionPage extends StatelessWidget {
             );
           });
     }).catchError((error) {
-      String errorText;
-      print(error);
-      if (error is FileSystemException &&
-          error.osError.message == "No such file or directory") {
-        print(error.osError);
-        print(error.osError.message);
-        errorText = 'You need to provide the import file at "${error.path}"';
-      } else {
-        errorText = 'Your exercise sheets could not be imported: $error';
-      }
       showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Import failed'),
-              content: Text(errorText),
+              content:
+                  Text('Your exercise sheets could not be imported: $error'),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),

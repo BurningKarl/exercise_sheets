@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DatabaseDefaults {
@@ -286,14 +285,6 @@ class DatabaseState with ChangeNotifier {
     await file.writeAsString(toJson());
   }
 
-  Future<File> export() async {
-    Directory baseDirectory = await getExternalStorageDirectory();
-    await Directory(baseDirectory.path + '/import').create(recursive: true);
-    var file = File(baseDirectory.path + '/export/exercise_sheets.json');
-    await exportToFile(file);
-    return file;
-  }
-
   Future<void> importFromFile(File file) async {
     Map<String, dynamic> content = jsonDecode(await file.readAsString());
 
@@ -317,12 +308,5 @@ class DatabaseState with ChangeNotifier {
     await batch.commit(noResult: true);
 
     await _loadFromDatabase();
-  }
-
-  Future<File> import() async {
-    Directory baseDirectory = await getExternalStorageDirectory();
-    var file = File(baseDirectory.path + '/import/exercise_sheets.json');
-    await importFromFile(file);
-    return file;
   }
 }
