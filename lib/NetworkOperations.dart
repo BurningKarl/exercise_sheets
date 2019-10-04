@@ -7,11 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NetworkOperations {
-  static bool isPdfHyperlink(Element element) {
-    return element.attributes.containsKey('href') &&
-        element.attributes['href'].endsWith('.pdf');
-  }
-
   static basicAuthentication(String username, String password) {
     return 'Basic ' + base64Encode(utf8.encode('$username:$password'));
   }
@@ -54,8 +49,8 @@ class NetworkOperations {
 
     print(response.statusMessage);
     if (response.statusMessage == 'OK') {
-      assert(response.headers['content-type'].single == 'application/pdf');
-      assert(response.headers['last-modified'].length == 1);
+      assert(['application/pdf', 'application/binary']
+          .contains(response.headers['content-type'].single));
     }
 
     return {
@@ -71,10 +66,22 @@ class NetworkOperations {
 
   Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url) async {
+    Uri baseUrl = Uri.parse(url);
     Document htmlDocument = parse(await read(url));
 
-    List<Element> documentElements =
-        htmlDocument.getElementsByTagName('a').where(isPdfHyperlink).toList();
+    List<Element> documentElements = htmlDocument.getElementsByTagName('a')
+      ..retainWhere((Element element) => element.attributes.containsKey('href'))
+      ..forEach((Element element) {
+        Uri link = baseUrl.resolve(element.attributes['href']);
+        if (link.host.endsWith('dropbox.com')) {
+          link = link.replace(
+            queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
+          );
+        }
+        element.attributes['href'] = link.toString();
+      })
+      ..retainWhere((Element element) =>
+          Uri.parse(element.attributes['href']).path.endsWith('.pdf'));
 
     return await Future.wait(
         documentElements.asMap().entries.map(elementToDocument));

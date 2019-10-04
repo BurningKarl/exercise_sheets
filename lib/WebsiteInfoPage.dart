@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:validators/validators.dart';
 
@@ -17,6 +18,7 @@ class WebsiteInfoPage extends StatefulWidget {
 class WebsiteInfoPageState extends State<WebsiteInfoPage> {
   final int websiteId;
   final _formKey = GlobalKey<FormState>();
+  final NumberFormat pointsFormat = NumberFormat.decimalPattern();
   String titleInput;
   String urlInput;
   String usernameInput;
@@ -25,8 +27,8 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
 
   WebsiteInfoPageState(this.websiteId);
 
-  String doubleToString(double value) {
-    return value != null ? value.toString() : "";
+  String pointsToString(double value) {
+    return value != null ? pointsFormat.format(value) : null;
   }
 
   Widget buildContent(BuildContext context, DatabaseState database) {
@@ -78,7 +80,7 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: doubleToString(website['maximumPoints']),
+              initialValue: pointsToString(website['maximumPoints']),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Maximum points',

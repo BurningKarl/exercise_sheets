@@ -223,10 +223,18 @@ class DatabaseState with ChangeNotifier {
   }
 
   bool isPdfUpdateNecessary(Map<String, dynamic> document) {
-    return document['statusMessage'] == 'OK' &&
-        (document['file'] == null ||
-            DateTime.parse(document['lastModified'])
-                .isAfter(DateTime.parse(document['fileLastModified'])));
+    if (document['statusMessage'] != 'OK') {
+      return false; // The document is unreachable, no download needed
+    } else if (document['file'] == null) {
+      return true; // No local PDF, download needed
+    } else if (document['lastModified'] == null) {
+      return true; // No info when it was last modified, update needed
+    } else {
+      // An update is needed iff the file is older than the document online
+      var onlineLastModified = DateTime.parse(document['lastModified']);
+      var fileLastModified = DateTime.parse(document['fileLastModified']);
+      return fileLastModified.isBefore(onlineLastModified);
+    }
   }
 
   Future<void> updateDocumentPdfs(int websiteId) async {

@@ -45,6 +45,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   }
 
   void handleNetworkError(dynamic error, BuildContext context) {
+    print('Network error: $error');
     String errorText;
     if (error is DioError && error.type == DioErrorType.DEFAULT) {
       errorText = 'No network connection available';
@@ -83,9 +84,9 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
           ListTile(
             leading: Icon(
               leadingIconSymbol,
-              color: databaseState.isPdfUpdateNecessary(document)
-                  ? null
-                  : Colors.green,
+              color: document.containsKey('file')
+                  ? Colors.green
+                  : null,
             ),
             title: Text(document['title']),
             subtitle: pointsText != null ? Text(pointsText) : null,
