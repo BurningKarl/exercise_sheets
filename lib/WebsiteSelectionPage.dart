@@ -13,9 +13,32 @@ import 'DatabaseState.dart';
 
 enum ExportOption { EXPORT, IMPORT, CANCEL }
 
-class WebsiteSelectionPage extends StatelessWidget {
+class WebsiteSelectionPage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => WebsiteSelectionPageState();
+}
+
+class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
   final NumberFormat pointsFormat = NumberFormat.decimalPattern();
   final NumberFormat averageFormat = NumberFormat.percentPattern();
+
+  final List<int> selectedItems = List();
+
+  bool isSelected(int index) => selectedItems.contains(index);
+
+  bool isInSelectionMode() {
+    return selectedItems.isNotEmpty;
+  }
+
+  void toggleSelection(int index) {
+    setState(() {
+      if (selectedItems.contains(index)) {
+        selectedItems.remove(index);
+      } else {
+        selectedItems.add(index);
+      }
+    });
+  }
 
   Future<void> handleExport(
       BuildContext context, DatabaseState databaseState) async {
@@ -144,8 +167,9 @@ class WebsiteSelectionPage extends StatelessWidget {
     }
   }
 
-  Widget buildWebsiteItem(BuildContext context, Map<String, dynamic> website,
-      DatabaseState databaseState) {
+  Widget buildWebsiteItem(
+      BuildContext context, int index, DatabaseState databaseState) {
+    Map<String, dynamic> website = databaseState.websites[index];
     Map<String, double> stats =
         databaseState.websiteIdToStatistics(website['id']);
 
@@ -210,6 +234,7 @@ class WebsiteSelectionPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
       ),
       child: Card(
+        color: isSelected(index) ? Colors.grey[400] : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -218,6 +243,11 @@ class WebsiteSelectionPage extends StatelessWidget {
               title: Text(website['title']),
               subtitle: statsText != null ? Text(statsText) : null,
               onTap: () {
+                if (isInSelectionMode()) {
+                  toggleSelection(index);
+                  return;
+                }
+
                 print('Opened selection for website ${website['title']} '
                     'with id ${website['id']}');
 
@@ -227,6 +257,9 @@ class WebsiteSelectionPage extends StatelessWidget {
                       builder: (context) =>
                           DocumentSelectionPage(website['id']),
                     ));
+              },
+              onLongPress: () {
+                toggleSelection(index);
               },
             ),
           ],
@@ -245,8 +278,7 @@ class WebsiteSelectionPage extends StatelessWidget {
         child: ListView.builder(
             itemCount: databaseState.websites.length,
             itemBuilder: (context, int index) {
-              return buildWebsiteItem(
-                  context, databaseState.websites[index], databaseState);
+              return buildWebsiteItem(context, index, databaseState);
             }),
       );
     }
@@ -256,8 +288,27 @@ class WebsiteSelectionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<DatabaseState>(
       builder: (context, databaseState, _) {
-        return Scaffold(
-          appBar: AppBar(
+        AppBar appBar;
+        if (isInSelectionMode()) {
+          appBar = AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                setState(() {
+                  selectedItems.clear();
+                });
+              },
+            ),
+            title: Text(selectedItems.length.toString()),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () {},
+              )
+            ],
+          );
+        } else {
+          appBar = AppBar(
             title: Text('Exercise sheets'),
             actions: <Widget>[
               IconButton(
@@ -265,7 +316,11 @@ class WebsiteSelectionPage extends StatelessWidget {
                 onPressed: () => handleImportExport(context, databaseState),
               )
             ],
-          ),
+          );
+        }
+
+        return Scaffold(
+          appBar: appBar,
           body: buildContent(context, databaseState),
           floatingActionButton: FloatingActionButton(
             child: Icon(Icons.add),
