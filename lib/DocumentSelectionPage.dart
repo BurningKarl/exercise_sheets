@@ -26,6 +26,8 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final NumberFormat pointsFormat = NumberFormat.decimalPattern();
 
+  // TODO: Add multi selection of documents analogous to WebsiteSelectionPage
+
   DocumentSelectionPageState(this.websiteId);
 
   String pointsToString(double value) {
@@ -203,6 +205,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
                   : Icons.cloud_done),
               tooltip: 'Download PDFs',
               onPressed: () async {
+                // TODO: Show SnackBar when download is successful
                 print('Download started');
                 databaseState.updateDocumentPdfs(websiteId).then((_) {
                   print('Download finished');
