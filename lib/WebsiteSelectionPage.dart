@@ -9,9 +9,7 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
-enum ExportOption {
-  EXPORT, IMPORT, CANCEL
-}
+enum ExportOption { EXPORT, IMPORT, CANCEL }
 
 class WebsiteSelectionPage extends StatelessWidget {
   final NumberFormat pointsFormat = NumberFormat.decimalPattern();
@@ -41,7 +39,8 @@ class WebsiteSelectionPage extends StatelessWidget {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Export failed'),
-              content: Text('Your exercise sheets could not be exported: $error'),
+              content:
+                  Text('Your exercise sheets could not be exported: $error'),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),
@@ -87,8 +86,7 @@ class WebsiteSelectionPage extends StatelessWidget {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Import failed'),
-              content:
-                  Text(errorText),
+              content: Text(errorText),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),
@@ -110,7 +108,7 @@ class WebsiteSelectionPage extends StatelessWidget {
             content: Text(
                 'You can import and export your websites and corresponding '
                 'exercise sheets inluding their points, but without the actual '
-                'PDF files. Importing data will override your existing data!'),
+                'PDF files.'),
             actions: <Widget>[
               FlatButton(
                 child: Text('CANCEL'),

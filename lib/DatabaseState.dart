@@ -276,7 +276,7 @@ class DatabaseState with ChangeNotifier {
 
   String toJson() {
     return jsonEncode({
-      'websites':websites,
+      'websites': websites,
       'documents': documents,
     });
   }
@@ -297,16 +297,21 @@ class DatabaseState with ChangeNotifier {
   Future<void> importFromFile(File file) async {
     Map<String, dynamic> content = jsonDecode(await file.readAsString());
 
-    sqflite.Batch batch = database.batch();
-    batch.delete('websites');
-    batch.delete('documents');
+    Map<int, int> oldToNewId = Map();
 
     for (Map<String, dynamic> website in content['websites']) {
-      batch.insert('websites', website);
+      oldToNewId[website['id']] =
+          await database.insert('websites', website..remove('id'));
     }
 
+    sqflite.Batch batch = database.batch();
     for (Map<String, dynamic> document in content['documents']) {
-      batch.insert('documents', document);
+      batch.insert(
+        'documents',
+        document
+          ..addAll({'websiteId': oldToNewId[document['websiteId']]})
+          ..remove('id'),
+      );
     }
 
     await batch.commit(noResult: true);
