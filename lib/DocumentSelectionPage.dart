@@ -52,8 +52,6 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   final SelectedDocuments selectedDocuments = SelectedDocuments([]);
   bool updatePdfsOnRefresh = false;
 
-  // TODO: Add multi selection of documents analogous to WebsiteSelectionPage
-
   DocumentSelectionPageState(this.websiteId);
 
   int negate(int value) {
