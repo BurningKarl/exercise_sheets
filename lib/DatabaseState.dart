@@ -111,18 +111,30 @@ class DatabaseState with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateDocument(int documentId, Map<String, dynamic> update) async {
+    await database.update('documents', update, where: 'id = $documentId');
+    await _loadFromDatabase();
+  }
+
+  Future<void> updateWebsite(int websiteId, Map<String, dynamic> update) async {
+    if (websiteId == null) {
+      await database.insert('websites', update);
+    } else {
+      await database.update('websites', update, where: 'id = $websiteId');
+    }
+    await _loadFromDatabase();
+  }
+
   Future<void> _saveDocumentUpdatesToDatabase(
-      int websiteId, Iterable<Map<String, dynamic>> documentUpdates) async {
+      Iterable<Map<String, dynamic>> documentUpdates) async {
     sqflite.Batch updatesBatch = database.batch();
 
     for (Map<String, dynamic> document in documentUpdates) {
       if (document['id'] == null) {
         updatesBatch.insert('documents', document);
-        print('Inserted');
       } else {
         updatesBatch.update('documents', document,
             where: 'id = ${document['id']}');
-        print('Updated');
       }
     }
 
@@ -220,7 +232,7 @@ class DatabaseState with ChangeNotifier {
     await database.rawDelete('DELETE FROM documents '
         'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
 
-    await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
+    await _saveDocumentUpdatesToDatabase(documentUpdates);
 
     return documentUpdates.length;
   }
@@ -260,32 +272,17 @@ class DatabaseState with ChangeNotifier {
       },
     );
 
-    await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
+    await _saveDocumentUpdatesToDatabase(documentUpdates);
 
     return documentUpdates.length;
-  }
-
-  Future<void> setDocument(Map<String, dynamic> document) async {
-    await database.update('documents', document,
-        where: 'id = ${document['id']}');
-    await _loadFromDatabase();
-  }
-
-  Future<void> setWebsite(Map<String, dynamic> website) async {
-    if (website['id'] == null) {
-      await database.insert('websites', website);
-    } else {
-      await database.update('websites', website,
-          where: 'id = ${website['id']}');
-    }
-    await _loadFromDatabase();
   }
 
   Future<void> deleteWebsites(Iterable<int> websiteIds) async {
     sqflite.Batch batch = database.batch();
     for (int websiteId in websiteIds) {
       (await StorageOperations.websiteIdToPdfDirectory(websiteId))
-          .delete(recursive: true).catchError((_) {});
+          .delete(recursive: true)
+          .catchError((_) {});
       batch.delete('websites', where: 'id = $websiteId');
       batch.delete('documents', where: 'websiteId = $websiteId');
     }

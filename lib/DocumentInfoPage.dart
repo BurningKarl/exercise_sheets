@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 
 import 'DatabaseState.dart';
 
+typedef DocumentUpdateCallback = Future<void> Function(
+    Map<String, dynamic> documentUpdate);
+
 class DocumentInfoPage extends StatefulWidget {
   final int documentId;
 
@@ -133,8 +136,7 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                 SizedBox(
                   width: 160,
                   child: TextFormField(
-                    initialValue:
-                        pointsToString(document['maximumPoints']),
+                    initialValue: pointsToString(document['maximumPoints']),
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Maximum points'),
@@ -176,9 +178,9 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                   document['archived'] == 0 ? Icons.archive : Icons.unarchive),
               tooltip: document['archived'] == 0 ? 'Archive' : 'Unarchive',
               onPressed: () async {
-                Map<String, dynamic> alteredDocument = Map.from(document);
-                alteredDocument['archived'] = negate(document['archived']);
-                await databaseState.setDocument(alteredDocument);
+                await databaseState.updateDocument(document['id'], {
+                  'archived': negate(document['archived']),
+                });
               },
             ),
             IconButton(
@@ -186,9 +188,9 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
                   document['pinned'] == 0 ? Icons.star_border : Icons.star),
               tooltip: document['pinned'] == 0 ? 'Pin' : 'Unpin',
               onPressed: () async {
-                Map<String, dynamic> alteredDocument = Map.from(document);
-                alteredDocument['pinned'] = negate(document['pinned']);
-                await databaseState.setDocument(alteredDocument);
+                await databaseState.updateDocument(document['id'], {
+                  'pinned': negate(document['pinned']),
+                });
               },
             ),
           ],
@@ -200,13 +202,11 @@ class DocumentInfoPageState extends State<DocumentInfoPage> {
           onPressed: () async {
             if (_formKey.currentState.validate()) {
               _formKey.currentState.save();
-              Map<String, dynamic> alteredDocument = Map.from(document);
-              alteredDocument.addAll({
+              await databaseState.updateDocument(document['id'], {
                 'title': titleInput,
                 'points': double.tryParse(pointsInput),
                 'maximumPoints': double.tryParse(maximumPointsInput),
               });
-              await databaseState.setDocument(alteredDocument);
               Navigator.pop(context);
             }
           },

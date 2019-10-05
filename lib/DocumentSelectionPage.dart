@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
-import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
+import 'package:collection/collection.dart';
+import 'package:exercise_sheets/DocumentItem.dart';
+import 'package:exercise_sheets/DatabaseState.dart';
+import 'package:exercise_sheets/WebsiteInfoPage.dart';
 
-import 'DatabaseState.dart';
-import 'NetworkOperations.dart';
-import 'WebsiteInfoPage.dart';
-import 'DocumentInfoPage.dart';
+class SelectedDocuments extends DelegatingList<int> with ChangeNotifier {
+  SelectedDocuments(List<int> base) : super(base);
+
+  void clear() {
+    super.clear();
+    notifyListeners();
+  }
+
+  bool isSelected(int documentId) {
+    return contains(documentId);
+  }
+
+  bool inSelectionMode() {
+    return isNotEmpty;
+  }
+
+  void toggleSelection(int documentId) {
+    if (contains(documentId)) {
+      remove(documentId);
+    } else {
+      add(documentId);
+    }
+    notifyListeners();
+  }
+}
 
 enum DocumentSelectionPageActions { show_hide_archived }
 
@@ -22,19 +45,16 @@ class DocumentSelectionPage extends StatefulWidget {
 }
 
 class DocumentSelectionPageState extends State<DocumentSelectionPage> {
-  final int websiteId;
-  final NumberFormat pointsFormat = NumberFormat.decimalPattern();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+
+  final int websiteId;
+  final SelectedDocuments selectedDocuments = SelectedDocuments([]);
   bool updatePdfsOnRefresh = false;
 
   // TODO: Add multi selection of documents analogous to WebsiteSelectionPage
 
   DocumentSelectionPageState(this.websiteId);
-
-  String pointsToString(double value) {
-    return value != null ? pointsFormat.format(value) : null;
-  }
 
   int negate(int value) {
     if (value == 0) {
@@ -90,97 +110,17 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     updatePdfsOnRefresh = false;
   }
 
-  Widget buildDocumentItem(BuildContext context, Map<String, dynamic> document,
-      DatabaseState databaseState, bool showArchived) {
-    var leadingIconSymbol;
-    if (document['statusMessage'] != 'OK') {
-      leadingIconSymbol = Icons.cancel;
-    } else if (document['archived'] != 0) {
-      leadingIconSymbol = Icons.archive;
-    } else if (document['pinned'] != 0) {
-      leadingIconSymbol = Icons.star;
-    } else if (document['points'] != null) {
-      leadingIconSymbol = Icons.assignment_turned_in;
-    } else {
-      leadingIconSymbol = Icons.assignment;
-    }
-
-    String pointsText = document['points'] != null
-        ? 'Points: ${pointsToString(document['points'])}'
-            '/${pointsToString(document['maximumPoints'])}'
-        : null;
-
-    Widget item = Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            leading: Icon(
-              leadingIconSymbol,
-              color: document['file'] != null ? Colors.green : null,
-            ),
-            title: Text(document['title']),
-            subtitle: pointsText != null ? Text(pointsText) : null,
-            trailing: IconButton(
-              icon: Icon(Icons.info),
-              onPressed: () {
-                print('Opened info for document ${document['title']} '
-                    'with id ${document['id']}');
-                Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => DocumentInfoPage(document['id']),
-                    ));
-              },
-            ),
-            onTap: () async {
-              print('Tried to open document ${document['title']} '
-                  'with id ${document['id']}');
-              if (document['file'] != null) {
-                print('Opened locally');
-                await OpenFile.open(document['file']);
-              } else if (document['statusMessage'] == 'OK') {
-                print('Opened by url');
-                NetworkOperations.launchUrl(document['url']);
-              } else {
-                print('Not opened: ${document['statusMessage']}');
-                showSnackBar('This document is unreachable: ' +
-                    document['statusMessage']);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-
-    if (showArchived) {
-      return item;
-    } else {
-      return Dismissible(
-        key: Key(document['id'].toString()),
-        direction: DismissDirection.horizontal,
-        onDismissed: (DismissDirection direction) async {
-          // Archive this document
-          Map<String, dynamic> alteredDocument = Map.from(document);
-          alteredDocument['archived'] = negate(document['archived']);
-          await databaseState.setDocument(alteredDocument);
-          print('Archived website ${document['title']} '
-              'with id ${document['id']}');
-        },
-        background: Container(
-          color: Colors.blue,
-          child: Icon(Icons.archive),
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-        ),
-        secondaryBackground: Container(
-          color: Colors.blue,
-          child: Icon(Icons.archive),
-          alignment: Alignment.centerRight,
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-        ),
-        child: item,
-      );
+  Future<void> archiveDocuments(
+      List<int> toBeArchived, DatabaseState databaseState) async {
+    var documents = toBeArchived
+        .map((documentId) => databaseState.documentIdToDocument(documentId));
+    for (var document in documents) {
+      // Archive this document
+      await databaseState.updateDocument(document['id'], {
+        'archived': negate(document['archived']),
+      });
+      print('Archived website ${document['title']} '
+          'with id ${document['id']}');
     }
   }
 
@@ -188,10 +128,12 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     Map<String, dynamic> website = databaseState.websiteIdToWebsite(websiteId);
     List<Map<String, dynamic>> documents =
         databaseState.websiteIdToDocuments(websiteId);
+
     if (website['showArchived'] == 0) {
       // Show only those document that are not archived
       documents.retainWhere((document) => document['archived'] == 0);
     }
+
     if (databaseState.databaseError) {
       return Center(
         child: Text('The database could not be opened'),
@@ -201,10 +143,27 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       key: _refreshIndicatorKey,
       onRefresh: () => handleRefresh(databaseState),
       child: Scrollbar(
-        child: ListView.builder(
+        child: ChangeNotifierProvider<SelectedDocuments>.value(
+          value: selectedDocuments,
+          child: ListView.builder(
             itemCount: documents.length,
-            itemBuilder: (context, int index) => buildDocumentItem(context,
-                documents[index], databaseState, website['showArchived'] != 0)),
+            itemBuilder: (context, int index) {
+              Map<String, dynamic> document = documents[index];
+
+              return DocumentItem(
+                document: document,
+                onToggleSelection: () {
+                  setState(() {
+                    selectedDocuments.toggleSelection(document['id']);
+                  });
+                },
+                enableDismiss: website['showArchived'] != 0,
+                onArchived: (_) =>
+                    archiveDocuments([document['id']], databaseState),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -215,9 +174,32 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       Map<String, dynamic> website =
           databaseState.websiteIdToWebsite(websiteId);
 
-      return Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
+      AppBar appBar;
+      if (selectedDocuments.inSelectionMode()) {
+        appBar = AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              setState(() {
+                selectedDocuments.clear();
+              });
+            },
+          ),
+          title: Text(selectedDocuments.length.toString()),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.archive),
+              onPressed: () async {
+                await archiveDocuments(selectedDocuments, databaseState);
+                setState(() {
+                  selectedDocuments.clear();
+                });
+              },
+            )
+          ],
+        );
+      } else {
+        appBar = AppBar(
           title: Text(website['title']),
           actions: <Widget>[
             IconButton(
@@ -255,15 +237,19 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
               ],
               onSelected: (DocumentSelectionPageActions value) {
                 if (value == DocumentSelectionPageActions.show_hide_archived) {
-                  Map<String, dynamic> alteredWebsite = Map.from(website);
-                  alteredWebsite['showArchived'] =
-                      negate(alteredWebsite['showArchived']);
-                  databaseState.setWebsite(alteredWebsite);
+                  databaseState.updateWebsite(website['id'], {
+                    'showArchived': negate(website['showArchived']),
+                  });
                 }
               },
             )
           ],
-        ),
+        );
+      }
+
+      return Scaffold(
+        key: _scaffoldKey,
+        appBar: appBar,
         body: buildContent(context, databaseState),
       );
     });

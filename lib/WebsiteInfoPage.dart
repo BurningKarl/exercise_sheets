@@ -147,15 +147,13 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
           onPressed: () {
             if (_formKey.currentState.validate()) {
               _formKey.currentState.save();
-              Map<String, dynamic> alteredWebsite = Map.from(website);
-              alteredWebsite.addAll({
+              databaseState.updateWebsite(website['id'], {
                 'title': titleInput,
                 'url': urlInput,
                 'username': usernameInput,
                 'password': passwordInput,
                 'maximumPoints': maximumPointsInput,
               });
-              databaseState.setWebsite(alteredWebsite);
               Navigator.pop(context);
             }
           },

@@ -18,6 +18,17 @@ class NetworkOperations {
       throw 'Could not launch $url';
     }
   }
+
+  static void replaceRelativeReferences(Element element, Uri baseUrl) {
+    Uri link = baseUrl.resolve(element.attributes['href']);
+    if (link.host.endsWith('dropbox.com')) {
+      link = link.replace(
+        queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
+      );
+    }
+    element.attributes['href'] = link.toString();
+  }
+
   // Member functions because they all use the same Dio
   final Dio dio;
 
@@ -69,17 +80,9 @@ class NetworkOperations {
     Document htmlDocument = parse(await read(url));
 
     List<Element> documentElements = htmlDocument.getElementsByTagName('a')
-      ..retainWhere((Element element) => element.attributes.containsKey('href'))
-      ..forEach((Element element) {
-        Uri link = baseUrl.resolve(element.attributes['href']);
-        if (link.host.endsWith('dropbox.com')) {
-          link = link.replace(
-            queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
-          );
-        }
-        element.attributes['href'] = link.toString();
-      })
-      ..retainWhere((Element element) =>
+      ..retainWhere((element) => element.attributes.containsKey('href'))
+      ..forEach((element) => replaceRelativeReferences(element, baseUrl))
+      ..retainWhere((element) =>
           Uri.parse(element.attributes['href']).path.endsWith('.pdf'));
 
     return await Future.wait(
