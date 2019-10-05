@@ -1,18 +1,17 @@
 import 'dart:io';
 
 import 'package:exercise_sheets/DatabaseState.dart';
+import 'package:exercise_sheets/StorageOperations.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 
 enum ExportOption { EXPORT, IMPORT, CANCEL }
 
 class ImportExportDialogs {
   static Future<void> handleExport(
       BuildContext context, DatabaseState databaseState) async {
-    Directory baseDirectory = await getExternalStorageDirectory();
-    var file = File(baseDirectory.path + '/exercise_sheets.json');
+    File file = await StorageOperations.exportFile();
     print(file.path);
 
     databaseState.exportToFile(file).then((_) {

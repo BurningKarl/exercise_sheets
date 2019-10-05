@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:exercise_sheets/StorageOperations.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NetworkOperations {
@@ -18,12 +18,6 @@ class NetworkOperations {
       throw 'Could not launch $url';
     }
   }
-
-  static Future<Directory> websiteIdToPdfDirectory(int websiteId) async {
-    Directory baseDirectory = await getExternalStorageDirectory();
-    return Directory(baseDirectory.path + '/$websiteId');
-  }
-
   // Member functions because they all use the same Dio
   final Dio dio;
 
@@ -95,9 +89,7 @@ class NetworkOperations {
   Future<MapEntry<int, File>> downloadDocumentPdf(
       Map<String, dynamic> document) async {
     String fileName = Uri.parse(document['url']).pathSegments.last;
-    Directory baseDirectory =
-        await websiteIdToPdfDirectory(document['websiteId']);
-    File file = File(baseDirectory.path + '/$fileName');
+    File file = await StorageOperations.documentToPdfFile(document, fileName);
     print(file.path);
     await file.create(recursive: true);
     await download(document['url'], file.path);

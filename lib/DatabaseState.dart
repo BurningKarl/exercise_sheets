@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:exercise_sheets/NetworkOperations.dart';
+import 'package:exercise_sheets/StorageOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
@@ -283,7 +284,7 @@ class DatabaseState with ChangeNotifier {
   Future<void> deleteWebsites(Iterable<int> websiteIds) async {
     sqflite.Batch batch = database.batch();
     for (int websiteId in websiteIds) {
-      (await NetworkOperations.websiteIdToPdfDirectory(websiteId))
+      (await StorageOperations.websiteIdToPdfDirectory(websiteId))
           .delete(recursive: true).catchError((_) {});
       batch.delete('websites', where: 'id = $websiteId');
       batch.delete('documents', where: 'websiteId = $websiteId');
