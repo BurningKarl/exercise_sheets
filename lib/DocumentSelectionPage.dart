@@ -114,13 +114,17 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       List<int> toBeArchived, DatabaseState databaseState) async {
     var documents = toBeArchived
         .map((documentId) => databaseState.documentIdToDocument(documentId));
-    for (var document in documents) {
-      // Archive this document
-      await databaseState.updateDocument(document['id'], {
+
+    var updates = Map.fromEntries(documents.map((document) {
+      return MapEntry(document['id'] as int, {
         'archived': negate(document['archived']),
       });
-      print('Archived website ${document['title']} '
-          'with id ${document['id']}');
+    }));
+
+    databaseState.updateDocuments(updates);
+
+    for (var document in documents) {
+      print('Archived website ${document['title']} with id ${document['id']}');
     }
   }
 
@@ -157,7 +161,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
                     selectedDocuments.toggleSelection(document['id']);
                   });
                 },
-                enableDismiss: website['showArchived'] != 0,
+                enableDismiss: website['showArchived'] == 0,
                 onArchived: (_) =>
                     archiveDocuments([document['id']], databaseState),
               );

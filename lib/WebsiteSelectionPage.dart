@@ -125,10 +125,10 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
                     selectedWebsites.toggleSelection(website['id']);
                   });
                 },
-                confirmDelete: (DismissDirection direction) =>
-                    confirmDeletion([index], databaseState),
-                onDelete: (DismissDirection direction) =>
-                    deleteWebsites([index], databaseState),
+                confirmDelete: (_) =>
+                    confirmDeletion([website['id']], databaseState),
+                onDelete: (_) =>
+                    deleteWebsites([website['id']], databaseState),
               );
             },
           ),

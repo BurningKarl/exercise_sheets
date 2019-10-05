@@ -111,14 +111,24 @@ class DatabaseState with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateDocument(int documentId, Map<String, dynamic> update) async {
-    await database.update('documents', update, where: 'id = $documentId');
+  Future<void> updateDocuments(Map<int, Map<String, dynamic>> updates) async {
+    await Future.wait(updates.entries.map((MapEntry entry) {
+      // key = documentId, value = update
+      return database.update('documents', entry.value,
+          where: 'id = ${entry.key}');
+    }));
     await _loadFromDatabase();
+  }
+
+  Future<void> updateDocument(
+      int documentId, Map<String, dynamic> update) async {
+    return updateDocuments({documentId: update});
   }
 
   Future<void> updateWebsite(int websiteId, Map<String, dynamic> update) async {
     if (websiteId == null) {
-      await database.insert('websites', update);
+      await database.insert(
+          'websites', DatabaseDefaults.completeWebsite(update));
     } else {
       await database.update('websites', update, where: 'id = $websiteId');
     }
