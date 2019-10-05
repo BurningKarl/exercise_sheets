@@ -58,10 +58,12 @@ class DocumentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget tile = Consumer<SelectedDocuments>(
+    return Consumer<SelectedDocuments>(
       builder: (context, selectedDocuments, _) {
-        return Card(
-          color: selectedDocuments.isSelected(document['id']) ? Colors.grey[400] : null,
+        Widget tile = Card(
+          color: selectedDocuments.isSelected(document['id'])
+              ? Colors.grey[400]
+              : null,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -114,31 +116,31 @@ class DocumentItem extends StatelessWidget {
             ],
           ),
         );
+
+        if (enableDismiss && !selectedDocuments.inSelectionMode()) {
+          return Dismissible(
+            key: Key(document['id'].toString()),
+            direction: DismissDirection.horizontal,
+            confirmDismiss: confirmArchive,
+            onDismissed: onArchived,
+            background: Container(
+              color: Colors.blue,
+              child: Icon(Icons.archive),
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+            ),
+            secondaryBackground: Container(
+              color: Colors.blue,
+              child: Icon(Icons.archive),
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+            ),
+            child: tile,
+          );
+        } else {
+          return tile;
+        }
       },
     );
-
-    if (enableDismiss) {
-      return tile;
-    } else {
-      return Dismissible(
-        key: Key(document['id'].toString()),
-        direction: DismissDirection.horizontal,
-        confirmDismiss: confirmArchive,
-        onDismissed: onArchived,
-        background: Container(
-          color: Colors.blue,
-          child: Icon(Icons.archive),
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-        ),
-        secondaryBackground: Container(
-          color: Colors.blue,
-          child: Icon(Icons.archive),
-          alignment: Alignment.centerRight,
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-        ),
-        child: tile,
-      );
-    }
   }
 }
