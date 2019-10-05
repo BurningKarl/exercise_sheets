@@ -34,7 +34,7 @@ class DatabaseDefaults {
       Map<String, dynamic> incompleteWebsite,
       {Map<String, dynamic> defaults}) {
     return Map.from(defaultWebsite)
-      ..addAll(defaults)
+      ..addAll(defaults ?? {})
       ..addAll(incompleteWebsite);
   }
 
@@ -42,7 +42,7 @@ class DatabaseDefaults {
       Map<String, dynamic> incompleteDocument,
       {Map<String, dynamic> defaults}) {
     return Map.from(defaultDocument)
-      ..addAll(defaults)
+      ..addAll(defaults ?? {})
       ..addAll(incompleteDocument);
   }
 }
@@ -309,12 +309,14 @@ class DatabaseState with ChangeNotifier {
 
     sqflite.Batch batch = database.batch();
     for (Map<String, dynamic> document in content['documents']) {
-      batch.insert(
-        'documents',
-        document
-          ..addAll({'websiteId': oldToNewId[document['websiteId']]})
-          ..remove('id'),
-      );
+      document.addAll({
+        'id': null,
+        'websiteId': oldToNewId[document['websiteId']],
+        'file': null,
+        'fileLastModified': null,
+      });
+
+      batch.insert('documents', DatabaseDefaults.completeDocument(document));
     }
 
     await batch.commit(noResult: true);

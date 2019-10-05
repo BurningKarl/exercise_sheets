@@ -86,7 +86,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
           ListTile(
             leading: Icon(
               leadingIconSymbol,
-              color: document.containsKey('file')
+              color: document['file'] != null
                   ? Colors.green
                   : null,
             ),
