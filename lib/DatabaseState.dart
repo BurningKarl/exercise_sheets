@@ -190,7 +190,7 @@ class DatabaseState with ChangeNotifier {
     });
   }
 
-  Future<void> updateDocumentMetadata(int websiteId) async {
+  Future<int> updateDocumentMetadata(int websiteId) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
     NetworkOperations operations = NetworkOperations.withAuthentication(
         website['username'], website['password']);
@@ -220,6 +220,8 @@ class DatabaseState with ChangeNotifier {
         'WHERE websiteId = $websiteId AND url NOT IN ($urlList)');
 
     await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
+
+    return documentUpdates.length;
   }
 
   bool isPdfUpdateNecessary(Map<String, dynamic> document) {
@@ -237,7 +239,8 @@ class DatabaseState with ChangeNotifier {
     }
   }
 
-  Future<void> updateDocumentPdfs(int websiteId) async {
+  Future<int> updateDocumentPdfs(int websiteId,
+      {bool forceUpdate = false}) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
     NetworkOperations operations = NetworkOperations.withAuthentication(
         website['username'], website['password']);
@@ -245,7 +248,7 @@ class DatabaseState with ChangeNotifier {
     DateTime now = DateTime.now().toUtc();
     Map<int, File> files = Map.fromEntries(await Future.wait(
         websiteIdToDocuments(websiteId)
-            .where(isPdfUpdateNecessary)
+            .where(forceUpdate ? (_) => true : isPdfUpdateNecessary)
             .map(operations.downloadDocumentPdf)));
 
     Iterable<Map<String, dynamic>> documentUpdates = files.entries.map(
@@ -257,6 +260,8 @@ class DatabaseState with ChangeNotifier {
     );
 
     await _saveDocumentUpdatesToDatabase(websiteId, documentUpdates);
+
+    return documentUpdates.length;
   }
 
   Future<void> setDocument(Map<String, dynamic> document) async {

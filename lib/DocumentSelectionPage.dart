@@ -23,8 +23,10 @@ class DocumentSelectionPage extends StatefulWidget {
 
 class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   final int websiteId;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final NumberFormat pointsFormat = NumberFormat.decimalPattern();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  bool updatePdfsOnRefresh = false;
 
   // TODO: Add multi selection of documents analogous to WebsiteSelectionPage
 
@@ -42,8 +44,16 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     }
   }
 
-  void showSnackBar(SnackBar snackBar) {
-    _scaffoldKey.currentState.showSnackBar(snackBar);
+  void showSnackBar(String content) {
+    _scaffoldKey.currentState.showSnackBar(SnackBar(
+      content: Text(content),
+    ));
+  }
+
+  bool isPdfUpdateNecessary(DatabaseState databaseState) {
+    return databaseState
+        .websiteIdToDocuments(websiteId)
+        .any(databaseState.isPdfUpdateNecessary);
   }
 
   void handleNetworkError(dynamic error, BuildContext context) {
@@ -54,9 +64,30 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     } else {
       errorText = 'A network error occured: \n$error';
     }
-    showSnackBar(SnackBar(
-      content: Text(errorText),
-    ));
+    showSnackBar(errorText);
+  }
+
+  Future<void> handleRefresh(DatabaseState databaseState) async {
+    print('handleRefresh: updatePdfsOnRefresh=$updatePdfsOnRefresh');
+    if (!updatePdfsOnRefresh) {
+      await databaseState
+          .updateDocumentMetadata(websiteId)
+          .then((numberOfUpdates) {
+        showSnackBar('Successfully scanned the website and updated '
+            '$numberOfUpdates documents');
+      }).catchError((error) => handleNetworkError(error, context));
+    } else if (isPdfUpdateNecessary(databaseState)) {
+      databaseState.updateDocumentPdfs(websiteId).then((numberOfUpdates) {
+        showSnackBar('Successfully updated $numberOfUpdates PDFs');
+      }).catchError((error) => handleNetworkError(error, context));
+    } else {
+      databaseState
+          .updateDocumentPdfs(websiteId, forceUpdate: true)
+          .then((numberOfUpdates) {
+        showSnackBar('Successfully updated $numberOfUpdates PDFs');
+      }).catchError((error) => handleNetworkError(error, context));
+    }
+    updatePdfsOnRefresh = false;
   }
 
   Widget buildDocumentItem(BuildContext context, Map<String, dynamic> document,
@@ -86,9 +117,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
           ListTile(
             leading: Icon(
               leadingIconSymbol,
-              color: document['file'] != null
-                  ? Colors.green
-                  : null,
+              color: document['file'] != null ? Colors.green : null,
             ),
             title: Text(document['title']),
             subtitle: pointsText != null ? Text(pointsText) : null,
@@ -115,10 +144,8 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
                 NetworkOperations.launchUrl(document['url']);
               } else {
                 print('Not opened: ${document['statusMessage']}');
-                showSnackBar(SnackBar(
-                  content: Text('This document is unreachable: ' +
-                      document['statusMessage']),
-                ));
+                showSnackBar('This document is unreachable: ' +
+                    document['statusMessage']);
               }
             },
           ),
@@ -171,11 +198,8 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       );
     }
     return RefreshIndicator(
-      onRefresh: () {
-        return databaseState
-            .updateDocumentMetadata(websiteId)
-            .catchError((error) => handleNetworkError(error, context));
-      },
+      key: _refreshIndicatorKey,
+      onRefresh: () => handleRefresh(databaseState),
       child: Scrollbar(
         child: ListView.builder(
             itemCount: documents.length,
@@ -191,25 +215,19 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
       Map<String, dynamic> website =
           databaseState.websiteIdToWebsite(websiteId);
 
-      bool isPdfUpdateNecessary = databaseState
-          .websiteIdToDocuments(websiteId)
-          .any(databaseState.isPdfUpdateNecessary);
       return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text(website['title']),
           actions: <Widget>[
             IconButton(
-              icon: Icon(isPdfUpdateNecessary
+              icon: Icon(isPdfUpdateNecessary(databaseState)
                   ? Icons.cloud_download
                   : Icons.cloud_done),
               tooltip: 'Download PDFs',
               onPressed: () async {
-                // TODO: Show SnackBar when download is successful
-                print('Download started');
-                databaseState.updateDocumentPdfs(websiteId).then((_) {
-                  print('Download finished');
-                }).catchError((error) => handleNetworkError(error, context));
+                updatePdfsOnRefresh = true;
+                await _refreshIndicatorKey.currentState.show();
               },
             ),
             IconButton(
