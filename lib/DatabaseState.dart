@@ -283,6 +283,8 @@ class DatabaseState with ChangeNotifier {
   Future<void> deleteWebsites(Iterable<int> websiteIds) async {
     sqflite.Batch batch = database.batch();
     for (int websiteId in websiteIds) {
+      (await NetworkOperations.websiteIdToPdfDirectory(websiteId))
+          .delete(recursive: true).catchError((_) {});
       batch.delete('websites', where: 'id = $websiteId');
       batch.delete('documents', where: 'websiteId = $websiteId');
     }

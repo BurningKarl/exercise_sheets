@@ -19,6 +19,11 @@ class NetworkOperations {
     }
   }
 
+  static Future<Directory> websiteIdToPdfDirectory(int websiteId) async {
+    Directory baseDirectory = await getExternalStorageDirectory();
+    return Directory(baseDirectory.path + '/$websiteId');
+  }
+
   // Member functions because they all use the same Dio
   final Dio dio;
 
@@ -90,11 +95,12 @@ class NetworkOperations {
   Future<MapEntry<int, File>> downloadDocumentPdf(
       Map<String, dynamic> document) async {
     String fileName = Uri.parse(document['url']).pathSegments.last;
-    Directory baseDirectory = await getExternalStorageDirectory();
-    String path = baseDirectory.path + '/${document['websiteId']}/$fileName';
-    print(path);
-    await File(path).create(recursive: true);
-    await download(document['url'], path);
-    return MapEntry(document['id'], File(path));
+    Directory baseDirectory =
+        await websiteIdToPdfDirectory(document['websiteId']);
+    File file = File(baseDirectory.path + '/$fileName');
+    print(file.path);
+    await file.create(recursive: true);
+    await download(document['url'], file.path);
+    return MapEntry(document['id'], file);
   }
 }
