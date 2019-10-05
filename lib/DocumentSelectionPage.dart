@@ -126,6 +126,24 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
     }
   }
 
+  Future<void> pinDocuments(
+      List<int> toBePinned, DatabaseState databaseState) async {
+    var documents = toBePinned
+        .map((documentId) => databaseState.documentIdToDocument(documentId));
+
+    var updates = Map.fromEntries(documents.map((document) {
+      return MapEntry(document['id'] as int, {
+        'pinned': negate(document['pinned']),
+      });
+    }));
+
+    databaseState.updateDocuments(updates);
+
+    for (var document in documents) {
+      print('Pinned website ${document['title']} with id ${document['id']}');
+    }
+  }
+
   Widget buildContent(BuildContext context, DatabaseState databaseState) {
     Map<String, dynamic> website = databaseState.websiteIdToWebsite(websiteId);
     List<Map<String, dynamic>> documents =
@@ -197,7 +215,16 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
                   selectedDocuments.clear();
                 });
               },
-            )
+            ),
+            IconButton(
+              icon: Icon(Icons.star),
+              onPressed: () async {
+                await pinDocuments(selectedDocuments, databaseState);
+                setState(() {
+                  selectedDocuments.clear();
+                });
+              },
+            ),
           ],
         );
       } else {
