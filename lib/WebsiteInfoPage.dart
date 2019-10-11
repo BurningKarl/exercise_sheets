@@ -121,6 +121,7 @@ class WebsiteInfoPageState extends State<WebsiteInfoPage> {
                 labelText: 'Password',
                 icon: Icon(Icons.vpn_key),
               ),
+              obscureText: true,
               onSaved: (String value) {
                 passwordInput = value;
               },

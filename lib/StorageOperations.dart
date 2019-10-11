@@ -13,11 +13,22 @@ class StorageOperations {
       {bool create = false}) async {
     Directory baseDirectory =
         await websiteIdToPdfDirectory(document['websiteId']);
-    return File(baseDirectory.path + '/$fileName');
+    String localFileName;
+    if (fileName.endsWith('.pdf')) {
+      localFileName = '$fileName';
+    } else {
+      localFileName = '$fileName.pdf';
+    }
+    return File(baseDirectory.path + '/$localFileName');
   }
 
   static Future<File> exportFile() async {
     Directory baseDirectory = await getExternalStorageDirectory();
     return File(baseDirectory.path + '/exercise_sheets.json');
+  }
+
+  static Future<Directory> cookieDirectory() async {
+    Directory baseDirectory = await getApplicationDocumentsDirectory();
+    return Directory(baseDirectory.path + '/cookies');
   }
 }

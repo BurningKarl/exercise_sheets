@@ -95,11 +95,11 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
             '$numberOfUpdates documents');
       }).catchError((error) => handleNetworkError(error, context));
     } else if (isPdfUpdateNecessary(databaseState)) {
-      databaseState.updateDocumentPdfs(websiteId).then((numberOfUpdates) {
+      await databaseState.updateDocumentPdfs(websiteId).then((numberOfUpdates) {
         showSnackBar('Successfully updated $numberOfUpdates PDFs');
       }).catchError((error) => handleNetworkError(error, context));
     } else {
-      databaseState
+      await databaseState
           .updateDocumentPdfs(websiteId, forceUpdate: true)
           .then((numberOfUpdates) {
         showSnackBar('Successfully updated $numberOfUpdates PDFs');

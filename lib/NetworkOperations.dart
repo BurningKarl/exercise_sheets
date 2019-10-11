@@ -14,6 +14,7 @@ class NetworkOperationsBase {
   final Dio dio;
   String username;
   String password;
+  bool hasCookieManager = false;
 
   NetworkOperationsBase() : dio = Dio();
 
@@ -27,7 +28,11 @@ class NetworkOperationsBase {
   }
 
   Future<void> addCookieManager() async {
-    dio.interceptors.add(CookieManager(CookieJar()));
+    Directory cookieDirectory = await StorageOperations.cookieDirectory();
+    cookieDirectory.create(recursive: true);
+    dio.interceptors
+        .add(CookieManager(PersistCookieJar(dir: cookieDirectory.path)));
+    hasCookieManager = true;
   }
 
   Future<String> read(String url) async {

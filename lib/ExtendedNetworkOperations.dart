@@ -19,7 +19,11 @@ mixin DropboxNetworkOperations on NetworkOperationsBase {
 
 mixin EcampusNetworkOperations on NetworkOperationsBase {
   // TODO: Implement recursive search for documents on Ecampus
-  static const String LOGIN_PAGE_URL = 'https://ecampus.uni-bonn.de/login.php?target=crs_1537926&cmd=force_login&lang=de';
+  static const String ECAMPUS_HOST = 'ecampus.uni-bonn.de';
+  static const String LOGIN_PAGE_URL =
+      'https://ecampus.uni-bonn.de/login.php?cmd=force_login';
+
+  bool isLoggedInOnEcampus = false;
 
   Future<void> loginToEcampus() async {
     Document htmlDocument = parse(await read(LOGIN_PAGE_URL));
@@ -46,33 +50,28 @@ mixin EcampusNetworkOperations on NetworkOperationsBase {
           validateStatus: (status) => [200, 302].contains(status),
           contentType: 'application/x-www-form-urlencoded',
         ));
+
     print(response.headers[HttpHeaders.locationHeader]?.single);
 
+    isLoggedInOnEcampus = true;
     // TODO: Check which part of the login fails with incorrect credentials
     // and provide the user with more meaningful error messages
-
-//    if (response.statusCode == HttpStatus.found) {
-//      Response response2 =
-//          await dio.get(response.headers[HttpHeaders.locationHeader].single);
-//      print(response2.request.headers);
-//      print(response2.redirects.single.location);
-//      print(response2.data);
-//    }
   }
 
   Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
       String url) async {
     Uri baseUrl = Uri.parse(url);
-    if (baseUrl.host == 'ecampus.uni-bonn.de') {
+    if (baseUrl.host == ECAMPUS_HOST) {
       print('Special ecampus code');
-      await addCookieManager();
-      print('Added cookie manager');
-      await loginToEcampus();
-      print('Login successful');
+      if (!hasCookieManager) {
+        await addCookieManager();
+        print('Added cookie manager');
+      }
+      if (!isLoggedInOnEcampus) {
+        await loginToEcampus();
+        print('Login successful');
+      }
 
-//      Response response = await dio.get(url);
-//      print(response.request.headers);
-//      print(response.redirects.first.location);
       Document htmlDocument = parse(await read(url));
 
       Element container = htmlDocument
@@ -88,7 +87,24 @@ mixin EcampusNetworkOperations on NetworkOperationsBase {
       return await Future.wait(
           documentElements.asMap().entries.map(elementToDocument));
     } else {
-      return super.retrieveDocumentMetadata(url);
+      return await super.retrieveDocumentMetadata(url);
     }
+  }
+
+  Future<MapEntry<int, File>> downloadDocumentPdf(
+      Map<String, dynamic> document) async {
+    Uri baseUrl = Uri.parse(document['url']);
+    if (baseUrl.host == ECAMPUS_HOST) {
+      print('Special ecampus code');
+      if (!hasCookieManager) {
+        await addCookieManager();
+        print('Added cookie manager');
+      }
+      if (!isLoggedInOnEcampus) {
+        await loginToEcampus();
+        print('Login successful');
+      }
+    }
+    return super.downloadDocumentPdf(document);
   }
 }
