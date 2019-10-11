@@ -1,43 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:exercise_sheets/ExtendedNetworkOperations.dart';
 import 'package:exercise_sheets/StorageOperations.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class NetworkOperations {
-  static basicAuthentication(String username, String password) {
-    return 'Basic ' + base64Encode(utf8.encode('$username:$password'));
-  }
-
-  static Future<void> launchUrl(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
-  static void replaceRelativeReferences(Element element, Uri baseUrl) {
-    Uri link = baseUrl.resolve(element.attributes['href']);
-    if (link.host.endsWith('dropbox.com')) {
-      link = link.replace(
-        queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
-      );
-    }
-    element.attributes['href'] = link.toString();
-  }
-
+class NetworkOperationsBase {
   // Member functions because they all use the same Dio
   final Dio dio;
+  String username;
+  String password;
 
-  NetworkOperations([Dio dio]) : dio = dio ?? Dio();
+  NetworkOperationsBase() : dio = Dio();
 
-  static withAuthentication(String username, String password) {
-    return NetworkOperations(Dio(BaseOptions(
-      headers: {'authorization': basicAuthentication(username, password)},
-    )));
+  void addAuthentication(String username, String password) {
+    this.username = username;
+    this.password = password;
+
+    // Add basic authentication
+    dio.options.headers['authorization'] =
+        'Basic ' + base64Encode(utf8.encode('$username:$password'));
   }
 
   Future<String> read(String url) async {
@@ -50,6 +34,16 @@ class NetworkOperations {
 
   Future<Response> download(String url, String savePath) {
     return dio.download(url, savePath);
+  }
+
+  Uri resolveRelativeReference(Uri baseUrl, String relativeUrl) {
+    return baseUrl.resolve(relativeUrl);
+  }
+
+  void replaceRelativeReferences(Element element, Uri baseUrl) {
+    String relativeUrl = element.attributes['href'];
+    element.attributes['href'] =
+        resolveRelativeReference(baseUrl, relativeUrl).toString();
   }
 
   Future<Map<String, dynamic>> elementToDocument(
@@ -97,5 +91,16 @@ class NetworkOperations {
     await file.create(recursive: true);
     await download(document['url'], file.path);
     return MapEntry(document['id'], file);
+  }
+}
+
+class NetworkOperations extends NetworkOperationsBase
+    with DropboxNetworkOperations, EcampusNetworkOperations {
+  static Future<void> launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
