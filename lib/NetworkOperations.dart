@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:exercise_sheets/ExtendedNetworkOperations.dart';
 import 'package:exercise_sheets/StorageOperations.dart';
-import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
+import 'package:html/parser.dart' show parse;
 import 'package:url_launcher/url_launcher.dart';
 
 class NetworkOperationsBase {
-  // Member functions because they all use the same Dio
   final Dio dio;
   String username;
   String password;
@@ -20,8 +22,12 @@ class NetworkOperationsBase {
     this.password = password;
 
     // Add basic authentication
-    dio.options.headers['authorization'] =
+    dio.options.headers[HttpHeaders.authorizationHeader] =
         'Basic ' + base64Encode(utf8.encode('$username:$password'));
+  }
+
+  Future<void> addCookieManager() async {
+    dio.interceptors.add(CookieManager(CookieJar()));
   }
 
   Future<String> read(String url) async {
@@ -54,15 +60,17 @@ class NetworkOperationsBase {
     print(response.statusMessage);
     if (response.statusMessage == 'OK') {
       assert(['application/pdf', 'application/binary']
-          .contains(response.headers['content-type'].single));
+          .contains(response.headers[HttpHeaders.contentTypeHeader].single));
     }
 
+    String lastModifiedDate =
+        response.headers[HttpHeaders.lastModifiedHeader]?.single;
     return {
       'url': element.attributes['href'],
       'titleOnWebsite': element.innerHtml.replaceAll('\n', '').trim(),
       'statusMessage': response.statusMessage,
-      'lastModified': response.headers['last-modified'] != null
-          ? HttpDate.parse(response.headers['last-modified'].single).toString()
+      'lastModified': lastModifiedDate != null
+          ? HttpDate.parse(lastModifiedDate).toUtc().toString()
           : null,
       'orderOnWebsite': entry.key,
     };
