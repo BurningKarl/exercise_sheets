@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'dart:collection';
 
 import 'package:dio/dio.dart';
 import 'package:exercise_sheets/NetworkOperations.dart';
-import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
+import 'package:html/parser.dart' show parse;
 
 class EcampusWrongCredentialsException extends WrongCredentialsException {}
 
@@ -55,16 +56,34 @@ class EcampusNetworkOperations extends NetworkOperations {
   }
 
   Future<List<Map<String, dynamic>>> retrieveDocumentMetadata() async {
-    Document htmlDocument = parse(await read(baseUrl.toString()));
-    print('Got htmlDocument');
-    Element container =
-        htmlDocument.getElementsByClassName('ilContainerItemsContainer').single;
+    Queue<String> folderUrls = Queue.from([baseUrl.toString()]);
+    List<Element> documentElements = [];
 
-    List<Element> documentElements = container.getElementsByClassName(
-        'il_ContainerItemTitle')
-      ..retainWhere((element) => element.attributes.containsKey('href'))
-      ..forEach(replaceRelativeReferences)
-      ..retainWhere((element) => element.attributes['href'].contains('file'));
+    while (folderUrls.isNotEmpty) {
+      String folderUrl = folderUrls.removeFirst();
+      Document htmlDocument = parse(await read(folderUrl));
+      print('Got htmlDocument at $folderUrl');
+
+      var containers =
+          htmlDocument.getElementsByClassName('ilContainerItemsContainer');
+      if (containers.isEmpty) continue;
+      Element container = containers.single;
+
+      List<Element> linkElements =
+          container.getElementsByClassName('il_ContainerItemTitle')
+            ..retainWhere((element) => element.attributes.containsKey('href'))
+            ..forEach(replaceRelativeReferences);
+
+      folderUrls.addAll(linkElements
+          .map((element) => element.attributes['href'])
+          .where((url) => url.contains('fold')));
+
+      documentElements.addAll(linkElements
+          .where((element) => element.attributes['href'].contains('file')));
+
+      print('folderUrls = $folderUrls');
+      print('documentElements = $documentElements');
+    }
 
     return await Future.wait(
         documentElements.asMap().entries.map(elementToDocument));
