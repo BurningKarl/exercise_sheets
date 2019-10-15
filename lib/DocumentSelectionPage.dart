@@ -1,3 +1,4 @@
+import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
@@ -74,10 +75,12 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
         .any(databaseState.isPdfUpdateNecessary);
   }
 
-  void handleNetworkError(dynamic error, BuildContext context) {
+  void handleNetworkException(dynamic error, BuildContext context) {
     print('Network error: $error');
     String errorText;
-    if (error is DioError && error.type == DioErrorType.DEFAULT) {
+    if (error is WrongCredentialsException) {
+      errorText = 'Wrong username or password';
+    } else if (error is DioError && error.type == DioErrorType.DEFAULT) {
       errorText = 'No network connection available';
     } else {
       errorText = 'A network error occured: \n$error';
@@ -87,23 +90,20 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
 
   Future<void> handleRefresh(DatabaseState databaseState) async {
     print('handleRefresh: updatePdfsOnRefresh=$updatePdfsOnRefresh');
-    if (!updatePdfsOnRefresh) {
-      await databaseState
-          .updateDocumentMetadata(websiteId)
-          .then((numberOfUpdates) {
+    bool _isPdfUpdateNecessary = isPdfUpdateNecessary(databaseState);
+    try {
+      if (!updatePdfsOnRefresh) {
+        int numberOfUpdates =
+            await databaseState.updateDocumentMetadata(websiteId);
         showSnackBar('Successfully scanned the website and updated '
             '$numberOfUpdates documents');
-      }).catchError((error) => handleNetworkError(error, context));
-    } else if (isPdfUpdateNecessary(databaseState)) {
-      await databaseState.updateDocumentPdfs(websiteId).then((numberOfUpdates) {
+      } else {
+        int numberOfUpdates = await databaseState.updateDocumentPdfs(websiteId,
+            forceUpdate: _isPdfUpdateNecessary);
         showSnackBar('Successfully updated $numberOfUpdates PDFs');
-      }).catchError((error) => handleNetworkError(error, context));
-    } else {
-      await databaseState
-          .updateDocumentPdfs(websiteId, forceUpdate: true)
-          .then((numberOfUpdates) {
-        showSnackBar('Successfully updated $numberOfUpdates PDFs');
-      }).catchError((error) => handleNetworkError(error, context));
+      }
+    } catch (exception) {
+      handleNetworkException(exception, context);
     }
     updatePdfsOnRefresh = false;
   }

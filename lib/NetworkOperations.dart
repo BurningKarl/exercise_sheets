@@ -10,18 +10,32 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:url_launcher/url_launcher.dart';
 
-class NetworkOperationsBase {
+class WrongCredentialsException implements Exception {}
+
+class NetworkOperations {
+  static Future<void> launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  factory NetworkOperations.forUrl(String baseUrl) {
+    Uri url = Uri.parse(baseUrl);
+    if (url.host.endsWith(EcampusNetworkOperations.HOST)) {
+      return EcampusNetworkOperations(url);
+    } else {
+      return NetworkOperations(url);
+    }
+  }
+
   final Dio dio;
-  String username;
-  String password;
-  bool hasCookieManager = false;
+  final Uri baseUrl;
 
-  NetworkOperationsBase() : dio = Dio();
+  NetworkOperations(this.baseUrl) : dio = Dio();
 
-  void addAuthentication(String username, String password) {
-    this.username = username;
-    this.password = password;
-
+  Future<void> authenticate(String username, String password) async {
     // Add basic authentication
     dio.options.headers[HttpHeaders.authorizationHeader] =
         'Basic ' + base64Encode(utf8.encode('$username:$password'));
@@ -32,7 +46,6 @@ class NetworkOperationsBase {
     cookieDirectory.create(recursive: true);
     dio.interceptors
         .add(CookieManager(PersistCookieJar(dir: cookieDirectory.path)));
-    hasCookieManager = true;
   }
 
   Future<String> read(String url) async {
@@ -47,14 +60,20 @@ class NetworkOperationsBase {
     return dio.download(url, savePath);
   }
 
-  Uri resolveRelativeReference(Uri baseUrl, String relativeUrl) {
-    return baseUrl.resolve(relativeUrl);
+  Uri resolveRelativeReference(String relativeUrl) {
+    Uri link = baseUrl.resolve(relativeUrl);
+    if (link.host.endsWith('dropbox.com')) {
+      link = link.replace(
+        queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
+      );
+    }
+    return link;
   }
 
-  void replaceRelativeReferences(Element element, Uri baseUrl) {
+  void replaceRelativeReferences(Element element) {
     String relativeUrl = element.attributes['href'];
     element.attributes['href'] =
-        resolveRelativeReference(baseUrl, relativeUrl).toString();
+        resolveRelativeReference(relativeUrl).toString();
   }
 
   Future<Map<String, dynamic>> elementToDocument(
@@ -81,14 +100,12 @@ class NetworkOperationsBase {
     };
   }
 
-  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
-      String url) async {
-    Uri baseUrl = Uri.parse(url);
-    Document htmlDocument = parse(await read(url));
+  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata() async {
+    Document htmlDocument = parse(await read(baseUrl.toString()));
 
     List<Element> documentElements = htmlDocument.getElementsByTagName('a')
       ..retainWhere((element) => element.attributes.containsKey('href'))
-      ..forEach((element) => replaceRelativeReferences(element, baseUrl))
+      ..forEach(replaceRelativeReferences)
       ..retainWhere((element) =>
           Uri.parse(element.attributes['href']).path.endsWith('.pdf'));
 
@@ -104,16 +121,5 @@ class NetworkOperationsBase {
     await file.create(recursive: true);
     await download(document['url'], file.path);
     return MapEntry(document['id'], file);
-  }
-}
-
-class NetworkOperations extends NetworkOperationsBase
-    with DropboxNetworkOperations, EcampusNetworkOperations {
-  static Future<void> launchUrl(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
   }
 }

@@ -5,27 +5,17 @@ import 'package:exercise_sheets/NetworkOperations.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 
-mixin DropboxNetworkOperations on NetworkOperationsBase {
-  Uri resolveRelativeReference(Uri baseUrl, String relativeUrl) {
-    Uri link = super.resolveRelativeReference(baseUrl, relativeUrl);
-    if (link.host.endsWith('dropbox.com')) {
-      link = link.replace(
-        queryParameters: Map.from(link.queryParameters)..['dl'] = '1',
-      );
-    }
-    return link;
-  }
-}
+class EcampusWrongCredentialsException extends WrongCredentialsException {}
 
-mixin EcampusNetworkOperations on NetworkOperationsBase {
+class EcampusNetworkOperations extends NetworkOperations {
   // TODO: Implement recursive search for documents on Ecampus
-  static const String ECAMPUS_HOST = 'ecampus.uni-bonn.de';
+  static const String HOST = 'ecampus.uni-bonn.de';
   static const String LOGIN_PAGE_URL =
       'https://ecampus.uni-bonn.de/login.php?cmd=force_login';
 
-  bool isLoggedInOnEcampus = false;
+  EcampusNetworkOperations(Uri baseUrl) : super(baseUrl);
 
-  Future<void> loginToEcampus() async {
+  Future<void> loginToEcampus(String username, String password) async {
     Document htmlDocument = parse(await read(LOGIN_PAGE_URL));
     Element loginForm = htmlDocument
         .getElementsByTagName('form')
@@ -38,10 +28,8 @@ mixin EcampusNetworkOperations on NetworkOperationsBase {
 
     data.addAll({'username': username, 'password': password});
 
-    Uri actionUrl = resolveRelativeReference(
-      Uri.parse(LOGIN_PAGE_URL),
-      loginForm.attributes['action'],
-    );
+    String relativeActionUrl = loginForm.attributes['action'];
+    Uri actionUrl = Uri.parse(LOGIN_PAGE_URL).resolve(relativeActionUrl);
 
     Response response = await dio.post(actionUrl.toString(),
         data: data,
@@ -51,60 +39,34 @@ mixin EcampusNetworkOperations on NetworkOperationsBase {
           contentType: 'application/x-www-form-urlencoded',
         ));
 
-    print(response.headers[HttpHeaders.locationHeader]?.single);
-
-    isLoggedInOnEcampus = true;
-    // TODO: Check which part of the login fails with incorrect credentials
-    // and provide the user with more meaningful error messages
-  }
-
-  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata(
-      String url) async {
-    Uri baseUrl = Uri.parse(url);
-    if (baseUrl.host == ECAMPUS_HOST) {
-      print('Special ecampus code');
-      if (!hasCookieManager) {
-        await addCookieManager();
-        print('Added cookie manager');
-      }
-      if (!isLoggedInOnEcampus) {
-        await loginToEcampus();
-        print('Login successful');
-      }
-
-      Document htmlDocument = parse(await read(url));
-
-      Element container = htmlDocument
-          .getElementsByClassName('ilContainerItemsContainer')
-          .single;
-
-      List<Element> documentElements = container.getElementsByClassName(
-          'il_ContainerItemTitle')
-        ..retainWhere((element) => element.attributes.containsKey('href'))
-        ..forEach((element) => replaceRelativeReferences(element, baseUrl))
-        ..retainWhere((element) => element.attributes['href'].contains('file'));
-
-      return await Future.wait(
-          documentElements.asMap().entries.map(elementToDocument));
+    String location = response.headers[HttpHeaders.locationHeader]?.single;
+    if (location == null) {
+      throw EcampusWrongCredentialsException();
     } else {
-      return await super.retrieveDocumentMetadata(url);
+      print(location);
     }
   }
 
-  Future<MapEntry<int, File>> downloadDocumentPdf(
-      Map<String, dynamic> document) async {
-    Uri baseUrl = Uri.parse(document['url']);
-    if (baseUrl.host == ECAMPUS_HOST) {
-      print('Special ecampus code');
-      if (!hasCookieManager) {
-        await addCookieManager();
-        print('Added cookie manager');
-      }
-      if (!isLoggedInOnEcampus) {
-        await loginToEcampus();
-        print('Login successful');
-      }
-    }
-    return super.downloadDocumentPdf(document);
+  Future<void> authenticate(String username, String password) async {
+    await addCookieManager();
+    print('Added cookie Manager');
+    await loginToEcampus(username, password);
+    print('Logged in to Ecampus');
+  }
+
+  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata() async {
+    Document htmlDocument = parse(await read(baseUrl.toString()));
+    print('Got htmlDocument');
+    Element container =
+        htmlDocument.getElementsByClassName('ilContainerItemsContainer').single;
+
+    List<Element> documentElements = container.getElementsByClassName(
+        'il_ContainerItemTitle')
+      ..retainWhere((element) => element.attributes.containsKey('href'))
+      ..forEach(replaceRelativeReferences)
+      ..retainWhere((element) => element.attributes['href'].contains('file'));
+
+    return await Future.wait(
+        documentElements.asMap().entries.map(elementToDocument));
   }
 }

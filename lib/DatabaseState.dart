@@ -215,11 +215,11 @@ class DatabaseState with ChangeNotifier {
 
   Future<int> updateDocumentMetadata(int websiteId) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    NetworkOperations operations = NetworkOperations()
-      ..addAuthentication(website['username'], website['password']);
+    NetworkOperations operations = NetworkOperations.forUrl(website['url']);
+    await operations.authenticate(website['username'], website['password']);
 
     Iterable<Map<String, dynamic>> documentUpdates =
-        await operations.retrieveDocumentMetadata(website['url']);
+        await operations.retrieveDocumentMetadata();
 
     String urlList =
         documentUpdates.map((document) => '"${document['url']}"').join(', ');
@@ -265,8 +265,8 @@ class DatabaseState with ChangeNotifier {
   Future<int> updateDocumentPdfs(int websiteId,
       {bool forceUpdate = false}) async {
     Map<String, dynamic> website = websiteIdToWebsite(websiteId);
-    NetworkOperations operations = NetworkOperations()
-      ..addAuthentication(website['username'], website['password']);
+    NetworkOperations operations = NetworkOperations.forUrl(website['url']);
+    await operations.authenticate(website['username'], website['password']);
 
     DateTime now = DateTime.now().toUtc();
     Map<int, File> files = Map.fromEntries(await Future.wait(
