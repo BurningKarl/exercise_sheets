@@ -60,6 +60,17 @@ class NetworkOperations {
     return dio.download(url, savePath);
   }
 
+  bool isPdfHeader(Response response) {
+    String contentType =
+        response.headers[HttpHeaders.contentTypeHeader]?.single;
+
+    print(contentType);
+    print(response.request.uri);
+    return contentType == 'application/pdf' ||
+        contentType == 'application/binary' &&
+            response.request.uri.host.endsWith('dropbox.com');
+  }
+
   Uri resolveRelativeReference(String relativeUrl) {
     Uri link = baseUrl.resolve(relativeUrl);
     if (link.host.endsWith('dropbox.com')) {
@@ -82,9 +93,8 @@ class NetworkOperations {
     Response response = await head(element.attributes['href']);
 
     print(response.statusMessage);
-    if (response.statusMessage == 'OK') {
-      assert(['application/pdf', 'application/binary']
-          .contains(response.headers[HttpHeaders.contentTypeHeader].single));
+    if (response.statusMessage == 'OK' && !isPdfHeader(response)) {
+      response.statusMessage = 'Not a PDF';
     }
 
     String lastModifiedDate =
