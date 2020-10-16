@@ -25,6 +25,8 @@ class NetworkOperations {
     Uri url = Uri.parse(baseUrl);
     if (url.host.endsWith(EcampusNetworkOperations.HOST)) {
       return EcampusNetworkOperations(url);
+    } else if (url.host.endsWith(OxfordMathsNetworkOperations.HOST)) {
+      return OxfordMathsNetworkOperations(url);
     } else {
       return NetworkOperations(url);
     }

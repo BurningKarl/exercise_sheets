@@ -89,3 +89,23 @@ class EcampusNetworkOperations extends NetworkOperations {
         documentElements.asMap().entries.map(elementToDocument));
   }
 }
+
+class OxfordMathsNetworkOperations extends NetworkOperations {
+  static const String HOST = 'courses.maths.ox.ac.uk';
+
+  OxfordMathsNetworkOperations(Uri baseUrl) : super(baseUrl);
+
+  Future<List<Map<String, dynamic>>> retrieveDocumentMetadata() async {
+    Document htmlDocument = parse(await read(baseUrl.toString()));
+
+    List<Element> documentElements = htmlDocument.getElementsByTagName('a')
+      ..retainWhere((element) => element.attributes.containsKey('href'))
+      ..forEach(replaceRelativeReferences)
+      ..retainWhere((element) => Uri.parse(element.attributes['href'])
+          .path
+          .contains('node/view_material'));
+
+    return await Future.wait(
+        documentElements.asMap().entries.map(elementToDocument));
+  }
+}
