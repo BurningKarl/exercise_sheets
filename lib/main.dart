@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<DatabaseState>(
-        builder: (context) => DatabaseState(context),
+        create: (context) => DatabaseState(context),
         child: MaterialApp(
           title: 'Exercise Sheets',
           theme: exerciseSheetsTheme,

@@ -51,8 +51,7 @@ class ImportExportDialogs {
 
   static Future<void> handleImport(
       BuildContext context, DatabaseState databaseState) async {
-    File file = File(await FilePicker.getFilePath(
-        type: FileType.ANY, fileExtension: 'json'));
+    File file = File(await FilePicker.getFilePath(allowedExtensions: ['json']));
 
     databaseState.importFromFile(file).then((_) {
       showDialog(
