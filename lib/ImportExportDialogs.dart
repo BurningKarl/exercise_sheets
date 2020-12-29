@@ -37,7 +37,7 @@ class ImportExportDialogs {
             return AlertDialog(
               title: Text('Export failed'),
               content:
-              Text('Your exercise sheets could not be exported: $error'),
+                  Text('Your exercise sheets could not be exported: $error'),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),
@@ -51,7 +51,8 @@ class ImportExportDialogs {
 
   static Future<void> handleImport(
       BuildContext context, DatabaseState databaseState) async {
-    File file = File(await FilePicker.getFilePath(allowedExtensions: ['json']));
+    File file = File(await FilePicker.getFilePath(
+        type: FileType.custom, allowedExtensions: ['json']));
 
     databaseState.importFromFile(file).then((_) {
       showDialog(
@@ -76,7 +77,7 @@ class ImportExportDialogs {
             return AlertDialog(
               title: Text('Import failed'),
               content:
-              Text('Your exercise sheets could not be imported: $error'),
+                  Text('Your exercise sheets could not be imported: $error'),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),
@@ -97,8 +98,8 @@ class ImportExportDialogs {
             title: Text('Import or export'),
             content: Text(
                 'You can import and export your websites and corresponding '
-                    'exercise sheets inluding their points, but without the actual '
-                    'PDF files.'),
+                'exercise sheets inluding their points, but without the actual '
+                'PDF files.'),
             actions: <Widget>[
               FlatButton(
                 child: Text('CANCEL'),
@@ -133,5 +134,4 @@ class ImportExportDialogs {
         break;
     }
   }
-
 }
