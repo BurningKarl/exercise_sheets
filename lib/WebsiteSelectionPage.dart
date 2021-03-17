@@ -72,13 +72,13 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
             title: Text(title),
             content: Text(content),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: Text('CANCEL'),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text('YES'),
                 onPressed: () {
                   Navigator.of(context).pop(true);
@@ -127,8 +127,7 @@ class WebsiteSelectionPageState extends State<WebsiteSelectionPage> {
                 },
                 confirmDelete: (_) =>
                     confirmDeletion([website['id']], databaseState),
-                onDelete: (_) =>
-                    deleteWebsites([website['id']], databaseState),
+                onDelete: (_) => deleteWebsites([website['id']], databaseState),
               );
             },
           ),

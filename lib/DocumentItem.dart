@@ -51,7 +51,7 @@ class DocumentItem extends StatelessWidget {
   }
 
   void showSnackBar(BuildContext context, String content) {
-    Scaffold.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(content),
     ));
   }

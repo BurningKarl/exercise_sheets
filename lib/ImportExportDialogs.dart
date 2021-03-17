@@ -23,7 +23,7 @@ class ImportExportDialogs {
               content: Text('Your exercise sheets were succesfully exported to '
                   '"${file.path}".'),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -39,7 +39,7 @@ class ImportExportDialogs {
               content:
                   Text('Your exercise sheets could not be exported: $error'),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -51,8 +51,10 @@ class ImportExportDialogs {
 
   static Future<void> handleImport(
       BuildContext context, DatabaseState databaseState) async {
-    File file = File(await FilePicker.getFilePath(
-        type: FileType.custom, allowedExtensions: ['json']));
+    FilePickerResult result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    if (result == null) return;
+    File file = File(result.files.single.path);
 
     databaseState.importFromFile(file).then((_) {
       showDialog(
@@ -60,10 +62,10 @@ class ImportExportDialogs {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Import successful'),
-              content: Text('Your exercise sheets were succesfully imported '
+              content: Text('Your exercise sheets were successfully imported '
                   'from "${file.path}".'),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -79,7 +81,7 @@ class ImportExportDialogs {
               content:
                   Text('Your exercise sheets could not be imported: $error'),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -101,19 +103,19 @@ class ImportExportDialogs {
                 'exercise sheets inluding their points, but without the actual '
                 'PDF files.'),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: Text('CANCEL'),
                 onPressed: () {
                   Navigator.of(context).pop(ExportOption.CANCEL);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text('IMPORT'),
                 onPressed: () {
                   Navigator.of(context).pop(ExportOption.IMPORT);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text('EXPORT'),
                 onPressed: () {
                   Navigator.of(context).pop(ExportOption.EXPORT);

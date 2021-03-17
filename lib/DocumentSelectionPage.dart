@@ -64,7 +64,7 @@ class DocumentSelectionPageState extends State<DocumentSelectionPage> {
   }
 
   void showSnackBar(String content) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(
+    ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(SnackBar(
       content: Text(content),
     ));
   }
